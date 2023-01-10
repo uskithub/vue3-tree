@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Treenode } from "./treenode";
 import { useSlots } from "vue";
+import { mdiCircleSmall, mdiMenuDown, mdiMenuRight } from "@mdi/js";
 
 const props = defineProps<{
   parent: Treenode | undefined
@@ -55,8 +56,15 @@ ul.subtree(
     @dragend="onDragend($event, childnode)"
   )
     .tree-item
-      v-icon(v-if="childnode.subtrees.length > 0" @click.prevent="emit('toggle-caret', $event, childnode.id)") {{ childnode.isFolding ? "mdi-menu-down" : "mdi-menu-right" }}
-      v-icon(v-else) {{ "mdi-circle-small" }}
+      svg(
+        v-if="childnode.subtrees.length > 0" 
+        style="width:24px;height:24px" 
+        viewBox="0 0 24 24"
+        @click.prevent="emit('toggle-caret', $event, childnode.id)"
+      )
+        path(fill="#000000" :d="childnode.isFolding ? mdiMenuDown : mdiMenuRight")
+      svg(v-else style="width:24px;height:24px" viewBox="0 0 24 24")
+        path(fill="#000000" :d="mdiCircleSmall")
       slot(:node="childnode", :parent="props.node", :isTopLevel="false")
       span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
     treenode(

@@ -19,6 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "@babel/types": "^7.20.7",
+    "@mdi/js": "^7.1.96",
     "@types/node": "^18.11.18",
     "@vitejs/plugin-vue": "^4.0.0",
     "@volar/vue-language-plugin-pug": "^1.0.24",
