@@ -51,7 +51,7 @@ ul.subtree(
     :key="childnode.id", 
     :data-id="childnode.id", 
     :draggable="childnode.isDraggable"
-    :class="{ freeze : !childnode.isDraggable }"
+    :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
     @dragstart="onDragstart($event, props.node, childnode)"
     @dragend="onDragend($event, childnode)"
   )
