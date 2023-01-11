@@ -46,7 +46,7 @@ ul.subtree(
   :data-id="props.node.id"
   @dragenter="onDragenter($event, props.node)"
 )
-  li.milestone(
+  li(
     v-for="childnode in props.node.subtrees",
     :key="childnode.id", 
     :data-id="childnode.id", 
