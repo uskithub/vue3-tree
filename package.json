@@ -1,28 +1,28 @@
 {
   "name": "vue3-tree",
   "version": "0.1.0",
-  "main": "./dist/vue3-tree.umd.js",
-  "module": "./dist/vue3-tree.es.js",
-  "types": "./types/index.d.ts",
+  "main": "dist/vue3-tree.umd.js",
+  "module": "dist/vue3-tree.es.js",
+  "types": "dist/types/index.d.ts",
   "files": [
-    "/dist",
-    "/types"
+    "dist"
   ],
-  "exports": {
-    ".": {
-      "import": "./dist/vue3-tree.es.js",
-      "require": "./dist/vue3-tree.umd.js"
-    },
-    "./dist/style.css": "./dist/style.css"
-  },
   "scripts": {
     "dev": "vite",
-    "build:clean": "shx rm -rf ./dist ./types",
-    "build": "vite build && yarn build:types",
-    "build:types": "vue-tsc --project tsconfig.types.json --declaration --emitDeclarationOnly --outDir ./types",
-    "typecheck": "vue-tsc --project tsconfig.types.json --noEmit"
+    "build:clean": "shx rm -rf dist types",
+    "build": "yarn typecheck && yarn build:clean && vite build && yarn build:types",
+    "build:types": "vue-tsc --project tsconfig.build-types.json --declaration --emitDeclarationOnly --outDir dist/types",
+    "typecheck": "vue-tsc --project tsconfig.build-types.json --noEmit"
   },
-  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uskithub/vue3-tree"
+  },
+  "author": "Yusuke SAITO <yusuke.saito@jibunstyle.com>",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@babel/types": "^7.20.7",
     "@mdi/js": "^7.1.96",

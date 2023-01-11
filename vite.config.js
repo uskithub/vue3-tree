@@ -6,6 +6,7 @@ import vue from "@vitejs/plugin-vue";
 module.exports = defineConfig({
     plugins: [vue({ style: { filename: "style.css" } })],
     build: {
+        outDir: "./dist",
         lib: {
             entry: path.resolve(__dirname, "src/index.ts"),
             name: "vue3-tree",

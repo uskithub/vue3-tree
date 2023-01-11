@@ -1,4 +1,4 @@
-import type { Treenode } from "./treenode"
-import tree from "./tree.vue"
+import tree from "./tree.vue";
 
-export { Treenode, tree }
+export type { Treenode } from "./treenode";
+export { tree };

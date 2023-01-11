@@ -97,9 +97,9 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
-  },                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+  },
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.types.json" }
+    { "path": "./tsconfig.build-types.json" }
   ]
 }
