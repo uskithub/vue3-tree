@@ -67,19 +67,19 @@ ul.subtree(
         path(fill="#000000" :d="mdiCircleSmall")
       slot(:node="childnode", :parent="props.node", :isTopLevel="false")
       span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
-    treenode(
-      v-if="childnode.isFolding"
-      :parent="props.node",
-      :node="childnode"
-      @dragstart="onDragstart"
-      @dragend="onDragend"
-      @dragenter="onDragenter"
-      @toggle-caret="onToggleCaret"
-    )
-      template(v-if="slots.default !== undefined" v-slot="slotProps")
-        slot(:node="slotProps.node", :parent="slotProps.parent", :isTopLevel="false")
-    ul.subtree(v-else
-      :data-id="childnode.id"
-      @dragenter="onDragenter($event, childnode)"
-    )
+      treenode(
+        v-if="childnode.isFolding"
+        :parent="props.node",
+        :node="childnode"
+        @dragstart="onDragstart"
+        @dragend="onDragend"
+        @dragenter="onDragenter"
+        @toggle-caret="onToggleCaret"
+      )
+        template(v-if="slots.default !== undefined" v-slot="slotProps")
+          slot(:node="slotProps.node", :parent="slotProps.parent", :isTopLevel="false")
+      ul.subtree(v-else
+        :data-id="childnode.id"
+        @dragenter="onDragenter($event, childnode)"
+      )
 </template>
