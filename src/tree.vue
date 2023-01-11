@@ -3,6 +3,7 @@
 import treenode from "./treenode.vue";
 
 import type { Treenode } from "./treenode";
+import { findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots } from "vue";
 import { mdiCircleSmall, mdiMenuDown, mdiMenuRight } from "@mdi/js";
 
@@ -21,20 +22,6 @@ const emit = defineEmits<{
   (e: "toggle-folding", node: Treenode): void
 }>();
 
-const getNodeById = (id: string, node: Treenode): Treenode | null => {
-  // 終了条件
-  if (node.id === id) return node;
-  if (node.subtrees.length === 0) {
-    return null;
-  }
-
-  for (let i = 0; i < node.subtrees.length; i++) {
-    const n = node.subtrees[i];
-    const ret = getNodeById(id, n);
-    if (ret !== null) return ret;
-  }
-  return null;
-};
 
 /**
  * targetUl が ofElem 自身かその子孫の場合 true を返します。
@@ -243,7 +230,7 @@ const onDragend = (e: MouseEvent) => {
 }
 
 const onToggleCaret = (e: MouseEvent, id: string) => {
-  const node = getNodeById(id, props.node);
+  const node = findNodeById(id, props.node);
   if (node === null) return;
   emit("toggle-folding", node);
 };
