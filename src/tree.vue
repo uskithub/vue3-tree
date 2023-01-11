@@ -237,47 +237,63 @@ const onToggleCaret = (e: MouseEvent, id: string) => {
 </script>
 
 <template lang="pug">
-ul.tree(
-  :data-id="props.node.id"
-  @dragenter="onDragenter($event, props.node)"
-)
+ul.tree
   li(
-    v-for="childnode in props.node.subtrees",
-    :key="childnode.id", 
-    :data-id="childnode.id", 
-    :draggable="childnode.isDraggable"
-    :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
-    @dragstart="onDragstart($event, props.node, childnode)"
-    @dragend="onDragend($event)"
+    :data-id="props.node.id"
   )
-    .tree-item
+    .tree-header
       svg(
-        v-if="childnode.subtrees.length > 0" 
+        v-if="props.node.subtrees.length > 0" 
         style="width:24px;height:24px" 
         viewBox="0 0 24 24"
-        @click.prevent="onToggleCaret($event, childnode.id)"
+        @click.prevent="onToggleCaret($event, props.node.id)"
       )
-        path(fill="#000000" :d="childnode.isFolding ? mdiMenuDown : mdiMenuRight")
+        path(fill="#000000" :d="props.node.isFolding ? mdiMenuDown : mdiMenuRight")
       svg(v-else style="width:24px;height:24px" viewBox="0 0 24 24")
         path(fill="#000000" :d="mdiCircleSmall")
-      slot(:node="childnode", :parent="props.node", :depth="1")
-      span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
-      treenode(
-        v-if="childnode.isFolding"
-        :parent="props.node",
-        :node="childnode"
-        :depth="2"
-        @dragstart="onDragstart"
-        @dragend="onDragend"
-        @dragenter="onDragenter"
-        @toggle-caret="onToggleCaret"
+      slot(:node="props.node", :depth="0")
+    ul.subtree(
+      v-if="props.node.isFolding"
+      :data-id="props.node.id"
+      @dragenter="onDragenter($event, props.node)"
+    )
+      li(
+        v-for="childnode in props.node.subtrees",
+        :key="childnode.id", 
+        :data-id="childnode.id", 
+        :draggable="childnode.isDraggable"
+        :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
+        @dragstart="onDragstart($event, props.node, childnode)"
+        @dragend="onDragend($event)"
       )
-        template(v-if="slots.default !== undefined" v-slot="slotProps")
-          slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
-      ul.subtree(v-else
-        :data-id="childnode.id"
-        @dragenter="onDragenter($event, childnode)"
-      )
+        .tree-item
+          svg(
+            v-if="childnode.subtrees.length > 0" 
+            style="width:24px;height:24px" 
+            viewBox="0 0 24 24"
+            @click.prevent="onToggleCaret($event, childnode.id)"
+          )
+            path(fill="#000000" :d="childnode.isFolding ? mdiMenuDown : mdiMenuRight")
+          svg(v-else style="width:24px;height:24px" viewBox="0 0 24 24")
+            path(fill="#000000" :d="mdiCircleSmall")
+          slot(:node="childnode", :parent="props.node", :depth="1")
+          span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
+          treenode(
+            v-if="childnode.isFolding"
+            :parent="props.node",
+            :node="childnode"
+            :depth="2"
+            @dragstart="onDragstart"
+            @dragend="onDragend"
+            @dragenter="onDragenter"
+            @toggle-caret="onToggleCaret"
+          )
+            template(v-if="slots.default !== undefined" v-slot="slotProps")
+              slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
+          ul.subtree(v-else
+            :data-id="childnode.id"
+            @dragenter="onDragenter($event, childnode)"
+          )
 </template>
 
 <style lang="sass" scoped>

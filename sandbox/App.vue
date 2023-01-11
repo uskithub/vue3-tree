@@ -115,7 +115,6 @@ const onToggleFolding = (node: Treenode) => {
 
 <template>
   <main>
-    <h1>Welcome to your your sandbox environment</h1>
     <tree :node="state.treeContent" @arrange="onArrange" @toggle-folding="onToggleFolding">
       <template v-slot="slotProps">
           <span>{{ slotProps.depth }} : {{ slotProps.node.name }} </span>
