@@ -7,6 +7,13 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/vue3-tree.es.js",
+      "require": "./dist/vue3-tree.umd.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
   "scripts": {
     "dev": "vite",
     "build:clean": "shx rm -rf dist types",

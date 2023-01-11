@@ -1,10 +1,10 @@
 "use strict";
-const path = require("path");
 const { defineConfig } = require("vite");
 import vue from "@vitejs/plugin-vue";
+import * as path from "path";
 
 module.exports = defineConfig({
-    plugins: [vue({ style: { filename: "style.css" } })],
+    plugins: [ vue({ style: { filename: "style.css" } })],
     build: {
         outDir: "./dist",
         lib: {
