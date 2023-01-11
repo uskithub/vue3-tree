@@ -6,6 +6,7 @@ import { mdiCircleSmall, mdiMenuDown, mdiMenuRight } from "@mdi/js";
 const props = defineProps<{
   parent: Treenode | undefined
   , node: Treenode
+  , depth: Number
 }>();
 
 const slots = useSlots();
@@ -65,19 +66,20 @@ ul.subtree(
         path(fill="#000000" :d="childnode.isFolding ? mdiMenuDown : mdiMenuRight")
       svg(v-else style="width:24px;height:24px" viewBox="0 0 24 24")
         path(fill="#000000" :d="mdiCircleSmall")
-      slot(:node="childnode", :parent="props.node", :isTopLevel="false")
+      slot(:node="childnode", :parent="props.node", :depth="props.depth")
       span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
       treenode(
         v-if="childnode.isFolding"
         :parent="props.node",
         :node="childnode"
+        :depth="props.depth+1"
         @dragstart="onDragstart"
         @dragend="onDragend"
         @dragenter="onDragenter"
         @toggle-caret="onToggleCaret"
       )
         template(v-if="slots.default !== undefined" v-slot="slotProps")
-          slot(:node="slotProps.node", :parent="slotProps.parent", :isTopLevel="false")
+          slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
       ul.subtree(v-else
         :data-id="childnode.id"
         @dragenter="onDragenter($event, childnode)"
