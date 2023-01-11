@@ -307,7 +307,7 @@ ul.tree(
     &.freeze
       background: #eee
     .tree-item
-      height: 2.5em
+      min-height: 2.5em
       padding: 0.5em 0.5em 0 0em
       
     .subtree
