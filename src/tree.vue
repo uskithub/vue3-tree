@@ -296,8 +296,9 @@ ul.tree
   border-top: 3px solid transparent
   border-left: 3px solid transparent
 
-  .mdi:before
-    font-weight: bold
+  :deep(.mdi):before
+    padding: 0 2px
+    font-size: 1.5rem
 
   &.drop-target
     border: 3px dotted #888
