@@ -20,6 +20,7 @@ const emit = defineEmits<{
   (e: "dragenter", event: MouseEvent, node: Treenode): void,
   (e: "arrange", node: Treenode, from: { id: string, node: Treenode }, to: { id: string, node: Treenode }, index: number): void
   (e: "toggle-folding", node: Treenode): void
+  (e: "hover", node: Treenode, isHovering: boolean): void
 }>();
 
 
@@ -234,12 +235,21 @@ const onToggleCaret = (e: MouseEvent, id: string) => {
   if (node === null) return;
   emit("toggle-folding", node);
 };
+
+const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
+  const node = findNodeById(id, props.node);
+  if (node === null) return;
+  emit("hover", node, isHovering);
+};
 </script>
 
 <template lang="pug">
 ul.tree
   li(:data-id="props.node.id")
-    .tree-header
+    .tree-header(
+      @mouseover.prevent.stop="onHover($event, props.node.id, true)"
+      @mouseout.prevent.stop="onHover($event, props.node.id, false)"
+    )
       i.mdi(
         v-if="props.node.subtrees.length > 0"
         :class="props.node.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
@@ -261,7 +271,10 @@ ul.tree
         @dragstart="onDragstart($event, props.node, childnode)"
         @dragend="onDragend($event)"
       )
-        .tree-item
+        .tree-item(
+          @mouseover.prevent.stop="onHover($event, childnode.id, true)"
+          @mouseout.prevent.stop="onHover($event, childnode.id, false)"
+        )
           i.mdi(
             v-if="childnode.subtrees.length > 0"
             :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
@@ -270,22 +283,23 @@ ul.tree
           i.mdi.mdi-circle-small(v-else)
           slot(:node="childnode", :parent="props.node", :depth="1")
           span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
-          treenode(
-            v-if="childnode.isFolding"
-            :parent="props.node",
-            :node="childnode"
-            :depth="2"
-            @dragstart="onDragstart"
-            @dragend="onDragend"
-            @dragenter="onDragenter"
-            @toggle-caret="onToggleCaret"
-          )
-            template(v-if="slots.default !== undefined" v-slot="slotProps")
-              slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
-          ul.subtree(v-else
-            :data-id="childnode.id"
-            @dragenter="onDragenter($event, childnode)"
-          )
+        treenode(
+          v-if="childnode.isFolding"
+          :parent="props.node",
+          :node="childnode"
+          :depth="2"
+          @dragstart="onDragstart"
+          @dragend="onDragend"
+          @dragenter="onDragenter"
+          @toggle-caret="onToggleCaret"
+          @hover="onHover"
+        )
+          template(v-if="slots.default !== undefined" v-slot="slotProps")
+            slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
+        ul.subtree(v-else
+          :data-id="childnode.id"
+          @dragenter="onDragenter($event, childnode)"
+        )
 </template>
 
 <style lang="sass" scoped>

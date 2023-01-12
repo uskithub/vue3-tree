@@ -5,7 +5,8 @@ export interface Treenode {
     // content: object;
     subtrees: Treenode[];
     isDraggable: boolean;
-    isFolding: boolean;
+    isFolding: boolean|undefined;
+    isHovering: boolean|undefined;
 };
 
 export function findNodeById(id: string, node: Treenode): Treenode | null {

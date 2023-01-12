@@ -1,77 +1,54 @@
 <script setup lang="ts">
 
-import Treenode from "./treenode";
+import type { Treenode } from "../src/treenode";
 import tree from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
 
 
 const treeContent = {
-  id: "1"
+  id: "0"
   , name: "root"
   , subtrees: [
     {
-      id: "11"
-      , name: "treeコンポーネントの実装"
+      id: "1"
+      , name: "subtree1"
       , subtrees: [
         {
-          id: "111"
-          , name: "SassでのFontAwesome利用"
+          id: "11"
+          , name: "subtree1-1"
           , subtrees: []
           , isDraggable: true
           , isFolding: false
         } as Treenode
         , {
-          id: "112"
-          , name: "コンポーネントの外部化"
-          , subtrees: []
-          , isDraggable: true
-          , isFolding: false
-        } as Treenode
-        , {
-          id: "113"
-          , name: "subtree1-3"
+          id: "12"
+          , name: "subtree1-2"
           , subtrees: [
             {
-              id: "1131"
-              , name: "subtree1-3-1"
+              id: "121"
+              , name: "subtree1-2-1"
               , subtrees: []
               , isDraggable: true
               , isFolding: true
             } as Treenode
-            , {
-              id: "1132"
-              , name: "subtree1-3-2"
-              , subtrees: []
-              , isDraggable: true
-              , isFolding: true
-            } as Treenode
-            , {
-              id: "1133"
-              , name: "subtree1-3-3"
-              , subtrees: []
-              , isDraggable: true
-              , isFolding: true
-            } as Treenode
-
           ]
           , isDraggable: true
           , isFolding: false
         } as Treenode
-
       ]
       , isDraggable: true
       , isFolding: true
     } as Treenode
     , {
-      id: "12"
+      id: "2"
       , name: "subtree2"
       , subtrees: []
       , isDraggable: true
       , isFolding: true
     } as Treenode
     , {
-      id: "13"
+      id: "3"
       , name: "subtree3"
       , subtrees: []
       , isDraggable: false
@@ -111,16 +88,32 @@ const onToggleFolding = (node: Treenode) => {
   node.isFolding = !node.isFolding;
 };
 
+const onHover = (node: Treenode, isHovering: boolean) => {
+  node.isHovering = isHovering;
+};
+
+const onClickExport = (event: MouseEvent, node: Treenode) => {
+  console.log("export", node);
+};
+
 </script>
 
-<template>
-  <main>
-    <tree :node="state.treeContent" @arrange="onArrange" @toggle-folding="onToggleFolding">
-      <template v-slot="slotProps">
-          <span>{{ slotProps.depth }} : {{ slotProps.node.name }} </span>
-      </template>
-    </tree>
-  </main>
+<template lang="pug">
+main
+  tree(
+    :node="state.treeContent"
+    @arrange="onArrange"
+    @toggle-folding="onToggleFolding"
+    @hover="onHover"
+  )
+    template(v-slot="slotProps")
+      template(v-if="slotProps.depth === 0")
+        span.header {{ slotProps.depth }} : {{ slotProps.node.name }}
+        i.mdi.mdi-export-variant(
+          v-show="slotProps.node.isHovering"
+          @click.prevent="onClickExport($event, slotProps.node)"
+        )
+      span.title(v-else) {{ slotProps.depth }} : {{ slotProps.node.name }}
 </template>
 
 <style lang="scss" scoped></style>

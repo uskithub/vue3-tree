@@ -18,6 +18,7 @@ const emit = defineEmits<{
   (e: "dragstart", event: MouseEvent, parent: Treenode, node: Treenode): void,
   (e: "dragend", event: MouseEvent, node: Treenode): void,
   (e: "toggle-caret", event: MouseEvent, id: string): void
+  (e: "hover", event: MouseEvent, id: string, isHovering: boolean): void
 }>();
 
 const onDragenter = (e: MouseEvent, treenode: Treenode) => {
@@ -39,6 +40,11 @@ const onToggleCaret = (e: MouseEvent, id: string) => {
   emit("toggle-caret", e, id);
   e.stopPropagation();
 };
+
+const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
+  emit("hover", e, id, isHovering);
+  e.stopPropagation();
+};
 </script>
 
 <template lang="pug">
@@ -55,7 +61,10 @@ ul.subtree(
     @dragstart="onDragstart($event, props.node, childnode)"
     @dragend="onDragend($event, childnode)"
   )
-    .tree-item
+    .tree-item(
+      @mouseover.prevent="onHover($event, childnode.id, true)"
+      @mouseout.prevent="onHover($event, childnode.id, false)"
+    )
       i.mdi(
         v-if="childnode.subtrees.length > 0"
         :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
@@ -73,6 +82,7 @@ ul.subtree(
       @dragend="onDragend"
       @dragenter="onDragenter"
       @toggle-caret="onToggleCaret"
+      @hover="onHover"
     )
       template(v-if="slots.default !== undefined" v-slot="slotProps")
         slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
