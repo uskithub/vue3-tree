@@ -5,7 +5,7 @@ import treenode from "./treenode.vue";
 import type { Treenode } from "./treenode";
 import { findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots } from "vue";
-import { mdiCircleSmall, mdiMenuDown, mdiMenuRight } from "@mdi/js";
+import "@mdi/font/css/materialdesignicons.css";
 
 const props = defineProps<{
   node: Treenode
@@ -238,19 +238,14 @@ const onToggleCaret = (e: MouseEvent, id: string) => {
 
 <template lang="pug">
 ul.tree
-  li(
-    :data-id="props.node.id"
-  )
+  li(:data-id="props.node.id")
     .tree-header
-      svg(
-        v-if="props.node.subtrees.length > 0" 
-        style="width:24px;height:24px" 
-        viewBox="0 0 24 24"
+      i.mdi(
+        v-if="props.node.subtrees.length > 0"
+        :class="props.node.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
         @click.prevent="onToggleCaret($event, props.node.id)"
       )
-        path(fill="#000000" :d="props.node.isFolding ? mdiMenuDown : mdiMenuRight")
-      svg(v-else style="width:24px;height:24px" viewBox="0 0 24 24")
-        path(fill="#000000" :d="mdiCircleSmall")
+      i.mdi.mdi-circle-small(v-else)
       slot(:node="props.node", :depth="0")
     ul.subtree(
       v-if="props.node.isFolding"
@@ -267,15 +262,12 @@ ul.tree
         @dragend="onDragend($event)"
       )
         .tree-item
-          svg(
-            v-if="childnode.subtrees.length > 0" 
-            style="width:24px;height:24px" 
-            viewBox="0 0 24 24"
+          i.mdi(
+            v-if="childnode.subtrees.length > 0"
+            :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
             @click.prevent="onToggleCaret($event, childnode.id)"
           )
-            path(fill="#000000" :d="childnode.isFolding ? mdiMenuDown : mdiMenuRight")
-          svg(v-else style="width:24px;height:24px" viewBox="0 0 24 24")
-            path(fill="#000000" :d="mdiCircleSmall")
+          i.mdi.mdi-circle-small(v-else)
           slot(:node="childnode", :parent="props.node", :depth="1")
           span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
           treenode(
@@ -303,6 +295,9 @@ ul.tree
   padding: 0 0 0 1em !important
   border-top: 3px solid transparent
   border-left: 3px solid transparent
+
+  .mdi:before
+    font-weight: bold
 
   &.drop-target
     border: 3px dotted #888

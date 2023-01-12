@@ -30,9 +30,11 @@
   },
   "author": "Yusuke SAITO <yusuke.saito@jibunstyle.com>",
   "license": "Apache-2.0",
+  "dependencies": {
+    "@mdi/font": "^7.1.96"
+  },
   "devDependencies": {
     "@babel/types": "^7.20.7",
-    "@mdi/js": "^7.1.96",
     "@types/node": "^18.11.18",
     "@vitejs/plugin-vue": "^4.0.0",
     "@volar/vue-language-plugin-pug": "^1.0.24",
