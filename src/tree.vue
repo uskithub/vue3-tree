@@ -289,7 +289,7 @@ const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
 </script>
 
 <template lang="pug">
-ul.tree(:class="{ modified: state.isModified }")
+ul.tree
   li(:data-id="state.tree.id")
     .tree-header(
       @dblclick.prevent="onToggleEditing($event, state.tree.id, true)"
@@ -310,10 +310,10 @@ ul.tree(:class="{ modified: state.isModified }")
         v-focus
         @blur="onToggleEditing($event, state.tree.id, false)" 
       )
-      i.mdi.mdi.mdi-circle-small(v-show="state.isModified")
     ul.subtree(
       v-if="state.tree.isFolding"
       :data-id="state.tree.id"
+      :class="{ modified: state.isModified }"
       @dragenter="onDragenter($event, state.tree)"
     )
       li(
@@ -420,7 +420,7 @@ ul.tree(:class="{ modified: state.isModified }")
       &.drop-target
         border: 3px dotted #888
 
-.tree.modified:before
-  content: "modification has not reflected."
-  color: #f00
+    .subtree.modified:before
+      content: "modification has not reflected."
+      color: #f00
 </style>
