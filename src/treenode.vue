@@ -2,6 +2,12 @@
 import type { _Treenode } from "./treenode";
 import { useSlots } from "vue";
 
+// custom directive for autofocus
+const vFocus = {
+  mounted: (el: HTMLElement) => el.focus()
+};
+
+
 const props = defineProps<{
   parent: _Treenode | undefined
   , node: _Treenode
@@ -46,7 +52,7 @@ ul.subtree(
     @dragend.stop="onDragend($event, childnode)"
   )
     .tree-item(
-      @click.prevent="onToggleEditing($event, childnode.id, true)"
+      @dblclick.prevent="onToggleEditing($event, childnode.id, true)"
       @mouseover.prevent.stop="onHover($event, childnode.id, true)"
       @mouseout.prevent.stop="onHover($event, childnode.id, false)"
     )
@@ -56,8 +62,14 @@ ul.subtree(
         @click.prevent.stop="emit('toggle-folding', $event, childnode.id)"
       )
       i.mdi.mdi-circle-small(v-else)
-      slot(:node="childnode", :parent="props.node", :depth="props.depth", :isHovering="childnode.isHovering", :isEditing="childnode.isEditing")
-      span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
+      slot(:node="childnode", :parent="props.node", :depth="props.depth", :isHovering="childnode.isHovering===true", :isEditing="childnode.isEditing===true")
+      span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
+      input(
+        v-if="slots.default === undefined && childnode.isEditing"
+        v-model="childnode.name"
+        v-focus
+        @blur="onToggleEditing($event, childnode.id, false)" 
+      )
     treenode(
       v-if="childnode.isFolding"
       :parent="props.node",

@@ -4,12 +4,27 @@ import treenode from "./treenode.vue";
 
 import type { Treenode, _Treenode } from "./treenode";
 import { findNodeById } from "./treenode";
-import { nextTick, reactive, useSlots } from "vue";
+import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 
-const props = defineProps<{
+// custom directive for autofocus
+const vFocus = {
+  mounted: (el: HTMLElement) => el.focus()
+};
+
+const props = withDefaults(defineProps<{
   node: Treenode
-}>();
+}>(), {
+  node: () => { 
+    return {
+      id: "0"
+      , name: "default root"
+      , subtrees: [] as Treenode[]
+      , isDraggable: true
+      , isFolding: true
+    } as Treenode; 
+  }
+});
 
 const slots = useSlots();
 
@@ -19,9 +34,12 @@ const slots = useSlots();
 const emit = defineEmits<{
   (e: "dragenter", event: MouseEvent, node: Treenode): void,
   (e: "arrange", node: Treenode, from: { id: string, node: Treenode }, to: { id: string, node: Treenode }, index: number): void
-  (e: "toggle-folding", node: Treenode): void
+  (e: "toggle-folding", id: string): void
 }>();
 
+const deepCopy = <T>(obj: T): T => {
+  return JSON.parse(JSON.stringify(obj)) as T;
+};
 
 /**
  * targetUl が ofElem 自身かその子孫の場合 true を返します。
@@ -68,6 +86,8 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
 
 const state = reactive<{
   tree: _Treenode;
+  orgTree: Treenode;
+  isModified: boolean;
   dragging: {
     elem: HTMLElement;
     parent: Treenode;
@@ -81,9 +101,18 @@ const state = reactive<{
     siblings: [HTMLElement | null, HTMLElement | null] | null;
   } | null;
 }>({
-  tree: props.node as _Treenode
+  tree: deepCopy(props.node) as _Treenode
+  , orgTree: reactive(props.node)
+  , isModified: false
   , dragging: null
   , draggingOn: null
+});
+
+const node = reactive(props.node);
+
+watch(state.orgTree, (newVal) => {
+  state.isModified = false;
+  console.log("watched", newVal);
 });
 
 /**
@@ -213,6 +242,16 @@ const onDragend = (e: MouseEvent) => {
     if (child !== elem) index++;
   }
 
+  // 元親から削除
+  exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
+  // 新親に追加
+  state.draggingOn.node.subtrees.splice(index, 0, node);
+  state.draggingOn.node.isFolding = true;
+
+  state.isModified = true;
+
+  console.log(state.tree);
+
   emit("arrange", node
     , { id: exParent.dataset.id, node: exPrarentNode }
     , { id: state.draggingOn.id, node: state.draggingOn.node }
@@ -232,21 +271,23 @@ const onDragend = (e: MouseEvent) => {
 }
 
 const onToggleFolding = (e: MouseEvent, id: string) => {
-  const node = findNodeById(id, state.tree);
-  if (node === null) return;
-  emit("toggle-folding", node);
+  const _node = findNodeById(id, state.tree);
+  if (_node === null) return;
+  _node.isFolding = !_node.isFolding;
+  emit("toggle-folding", id);
 };
 
 const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
   console.log("editing", id, isEditing);
-  const node = findNodeById(id, state.tree);
-  if (node === null) return;
+  const _node = findNodeById(id, state.tree);
+  if (_node === null) return;
+  _node.isEditing = isEditing;
 };
 
 const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
-  const node = findNodeById(id, state.tree);
-  if (node === null) return;
-  node.isHovering = isHovering;
+  const _node = findNodeById(id, state.tree);
+  if (_node === null) return;
+  _node.isHovering = isHovering;
 };
 </script>
 
@@ -254,7 +295,7 @@ const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
 ul.tree
   li(:data-id="state.tree.id")
     .tree-header(
-      @click.prevent="onToggleEditing($event, state.tree.id, true)"
+      @dblclick.prevent="onToggleEditing($event, state.tree.id, true)"
       @mouseover.prevent.stop="onHover($event, state.tree.id, true)"
       @mouseout.prevent.stop="onHover($event, state.tree.id, false)"
     )
@@ -269,7 +310,10 @@ ul.tree
       input(
         v-if="slots.default === undefined && state.tree.isEditing"
         v-model="state.tree.name"
+        v-focus
+        @blur="onToggleEditing($event, state.tree.id, false)" 
       )
+      i.mdi.mdi.mdi-circle-small(v-show="state.isModified")
     ul.subtree(
       v-if="state.tree.isFolding"
       :data-id="state.tree.id"
@@ -285,7 +329,7 @@ ul.tree
         @dragend="onDragend($event)"
       )
         .tree-item(
-          @click.prevent="onToggleEditing($event, childnode.id, true)"
+          @dblclick.prevent="onToggleEditing($event, childnode.id, true)"
           @mouseover.prevent.stop="onHover($event, childnode.id, true)"
           @mouseout.prevent.stop="onHover($event, childnode.id, false)"
         )
@@ -296,7 +340,13 @@ ul.tree
           )
           i.mdi.mdi-circle-small(v-else)
           slot(:node="childnode", :parent="state.tree", :depth="1", :isHovering="childnode.isHovering===true", :isEditing="childnode.isEditing===true")
-          span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
+          span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
+          input(
+            v-if="slots.default === undefined && childnode.isEditing"
+            v-model="childnode.name"
+            v-focus
+            @blur="onToggleEditing($event, childnode.id, false)" 
+          )
         treenode(
           v-if="childnode.isFolding"
           :parent="state.tree",
