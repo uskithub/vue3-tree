@@ -86,7 +86,6 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
 
 const state = reactive<{
   tree: _Treenode;
-  orgTree: Treenode;
   isModified: boolean;
   dragging: {
     elem: HTMLElement;
@@ -102,18 +101,16 @@ const state = reactive<{
   } | null;
 }>({
   tree: deepCopy(props.node) as _Treenode
-  , orgTree: reactive(props.node)
   , isModified: false
   , dragging: null
   , draggingOn: null
 });
 
-const node = reactive(props.node);
-
-watch(state.orgTree, (newVal) => {
+watch(props.node, (newVal) => {
   state.isModified = false;
-  console.log("watched", newVal);
+  state.tree = deepCopy(newVal) as _Treenode;
 });
+
 
 /**
  * dragされた要素をdrag状態にします（スタイルを変えます）。
@@ -292,7 +289,7 @@ const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
 </script>
 
 <template lang="pug">
-ul.tree
+ul.tree(:class="{ modified: state.isModified }")
   li(:data-id="state.tree.id")
     .tree-header(
       @dblclick.prevent="onToggleEditing($event, state.tree.id, true)"
@@ -422,4 +419,8 @@ ul.tree
 
       &.drop-target
         border: 3px dotted #888
+
+.tree.modified:before
+  content: "modification has not reflected."
+  color: #f00
 </style>

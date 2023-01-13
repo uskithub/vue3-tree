@@ -148,14 +148,14 @@ const onArrange = (
   }
   , index: number
 ) => {
-  // TODO: 親のstateを変更したのに、子がreactiveに反応しない
-  state.treeContent = treeContent2;
-  console.log(state.treeContent);
-  // // 元親から削除
-  // from.node.subtrees = from.node.subtrees.filter((subtree) => subtree.id !== node.id);
-  // // 新親に追加
-  // to.node.subtrees.splice(index, 0, node);
-  // to.node.isFolding = true;
+  const _from = findNodeById(from.id, state.treeContent);
+  const _to = findNodeById(to.id, state.treeContent);
+  if (_from === null || _to === null) return;
+  // 元親から削除
+  _from.subtrees = _from.subtrees.filter((subtree) => subtree.id !== node.id);
+  // 新親に追加
+  _to.subtrees.splice(index, 0, node);
+  _to.isFolding = true;
 };
 
 const onToggleFolding = (id: string) => {
