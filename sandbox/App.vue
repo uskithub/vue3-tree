@@ -105,7 +105,7 @@ main
       template(v-if="slotProps.depth === 0")
         span.header {{ slotProps.depth }} : {{ slotProps.node.name }}
         i.mdi.mdi-export-variant(
-          v-show="slotProps.node.isHovering"
+          v-show="slotProps.isHovering"
           @click.prevent="onClickExport($event, slotProps.node)"
         )
       span.title(v-else) {{ slotProps.depth }} : {{ slotProps.node.name }}

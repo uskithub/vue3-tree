@@ -264,7 +264,7 @@ ul.tree
         @click.prevent.stop="onToggleFolding($event, state.tree.id)"
       )
       i.mdi.mdi-circle-small(v-else)
-      slot(:node="state.tree", :depth="0", :isHovering="state.tree.isHovering", :isEditing="state.tree.isEditing")
+      slot(:node="state.tree", :depth="0", :isHovering="state.tree.isHovering===true", :isEditing="state.tree.isEditing===true")
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(
         v-if="slots.default === undefined && state.tree.isEditing"
@@ -295,7 +295,7 @@ ul.tree
             @click.prevent.stop="onToggleFolding($event, childnode.id)"
           )
           i.mdi.mdi-circle-small(v-else)
-          slot(:node="childnode", :parent="state.tree", :depth="1", :isHovering="childnode.isHovering", :isEditing="childnode.isEditing")
+          slot(:node="childnode", :parent="state.tree", :depth="1", :isHovering="childnode.isHovering===true", :isEditing="childnode.isEditing===true")
           span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
         treenode(
           v-if="childnode.isFolding"
