@@ -21,30 +21,12 @@ const emit = defineEmits<{
   (e: "hover", event: MouseEvent, id: string, isHovering: boolean): void
 }>();
 
-const onDragenter = (e: MouseEvent, treenode: Treenode) => {
-  emit("dragenter", e, treenode);
-  e.stopPropagation();
-};
+const onDragenter = (e: MouseEvent, treenode: Treenode) => emit("dragenter", e, treenode);
+const onDragstart = (e: MouseEvent, parent: Treenode, treenode: Treenode) => emit("dragstart", e, parent, treenode);
+const onDragend = (e: MouseEvent, treenode: Treenode) => emit("dragend", e, treenode);
+const onToggleCaret = (e: MouseEvent, id: string) => emit("toggle-caret", e, id);
+const onHover = (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering);
 
-const onDragstart = (e: MouseEvent, parent: Treenode, treenode: Treenode) => {
-  emit("dragstart", e, parent, treenode);
-  e.stopPropagation();
-};
-
-const onDragend = (e: MouseEvent, treenode: Treenode) => {
-  emit("dragend", e, treenode);
-  e.stopPropagation();
-};
-
-const onToggleCaret = (e: MouseEvent, id: string) => {
-  emit("toggle-caret", e, id);
-  e.stopPropagation();
-};
-
-const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
-  emit("hover", e, id, isHovering);
-  e.stopPropagation();
-};
 </script>
 
 <template lang="pug">
@@ -58,17 +40,17 @@ ul.subtree(
     :data-id="childnode.id", 
     :draggable="childnode.isDraggable"
     :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
-    @dragstart="onDragstart($event, props.node, childnode)"
-    @dragend="onDragend($event, childnode)"
+    @dragstart.stop="onDragstart($event, props.node, childnode)"
+    @dragend.stop="onDragend($event, childnode)"
   )
     .tree-item(
-      @mouseover.prevent="onHover($event, childnode.id, true)"
-      @mouseout.prevent="onHover($event, childnode.id, false)"
+      @mouseover.prevent.stop="onHover($event, childnode.id, true)"
+      @mouseout.prevent.stop="onHover($event, childnode.id, false)"
     )
       i.mdi(
         v-if="childnode.subtrees.length > 0"
         :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
-        @click.prevent="emit('toggle-caret', $event, childnode.id)"
+        @click.prevent.stop="emit('toggle-caret', $event, childnode.id)"
       )
       i.mdi.mdi-circle-small(v-else)
       slot(:node="childnode", :parent="props.node", :depth="props.depth")
@@ -88,6 +70,6 @@ ul.subtree(
         slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
     ul.subtree(v-else
       :data-id="childnode.id"
-      @dragenter="onDragenter($event, childnode)"
+      @dragenter.stop="onDragenter($event, childnode)"
     )
 </template>
