@@ -3,13 +3,17 @@ export interface Treenode {
     name: string;
     styleClass: object | null;
     // content: object;
-    subtrees: Treenode[];
+    subtrees: this[];
     isDraggable: boolean;
     isFolding: boolean|undefined;
+};
+
+export interface _Treenode extends Treenode {
+    isEditing: boolean|undefined;
     isHovering: boolean|undefined;
 };
 
-export function findNodeById(id: string, node: Treenode): Treenode | null {
+export function findNodeById<T extends Treenode>(id: string, node: T): T | null {
     if (node.id === id) {
         return node;
     }

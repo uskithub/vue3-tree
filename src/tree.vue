@@ -2,7 +2,7 @@
 // view
 import treenode from "./treenode.vue";
 
-import type { Treenode } from "./treenode";
+import type { Treenode, _Treenode } from "./treenode";
 import { findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
@@ -20,7 +20,6 @@ const emit = defineEmits<{
   (e: "dragenter", event: MouseEvent, node: Treenode): void,
   (e: "arrange", node: Treenode, from: { id: string, node: Treenode }, to: { id: string, node: Treenode }, index: number): void
   (e: "toggle-folding", node: Treenode): void
-  (e: "hover", node: Treenode, isHovering: boolean): void
 }>();
 
 
@@ -68,6 +67,7 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
 };
 
 const state = reactive<{
+  tree: _Treenode;
   dragging: {
     elem: HTMLElement;
     parent: Treenode;
@@ -81,7 +81,8 @@ const state = reactive<{
     siblings: [HTMLElement | null, HTMLElement | null] | null;
   } | null;
 }>({
-  dragging: null
+  tree: props.node as _Treenode
+  , dragging: null
   , draggingOn: null
 });
 
@@ -230,72 +231,92 @@ const onDragend = (e: MouseEvent) => {
   state.draggingOn = null;
 }
 
-const onToggleCaret = (e: MouseEvent, id: string) => {
-  const node = findNodeById(id, props.node);
+const onToggleFolding = (e: MouseEvent, id: string) => {
+  const node = findNodeById(id, state.tree);
   if (node === null) return;
   emit("toggle-folding", node);
 };
 
-const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
-  const node = findNodeById(id, props.node);
+const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
+  console.log("editing", id, isEditing);
+  const node = findNodeById(id, state.tree);
   if (node === null) return;
-  emit("hover", node, isHovering);
+};
+
+const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
+  const node = findNodeById(id, state.tree);
+  if (node === null) return;
+  node.isHovering = isHovering;
 };
 </script>
 
 <template lang="pug">
 ul.tree
-  li(:data-id="props.node.id")
+  li(:data-id="state.tree.id")
     .tree-header(
-      @mouseover.prevent.stop="onHover($event, props.node.id, true)"
-      @mouseout.prevent.stop="onHover($event, props.node.id, false)"
+      @click.prevent="onToggleEditing($event, state.tree.id, true)"
+      @mouseover.prevent.stop="onHover($event, state.tree.id, true)"
+      @mouseout.prevent.stop="onHover($event, state.tree.id, false)"
     )
       i.mdi(
-        v-if="props.node.subtrees.length > 0"
-        :class="props.node.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
-        @click.prevent="onToggleCaret($event, props.node.id)"
+        v-if="state.tree.subtrees.length > 0"
+        :class="state.tree.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
+        @click.prevent.stop="onToggleFolding($event, state.tree.id)"
       )
       i.mdi.mdi-circle-small(v-else)
-      slot(:node="props.node", :depth="0")
+      slot(:node="state.tree", :depth="0", :isHovering="state.tree.isHovering", :isEditing="state.tree.isEditing")
+      span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
+      input(
+        v-if="slots.default === undefined && state.tree.isEditing"
+        v-model="state.tree.name"
+      )
     ul.subtree(
-      v-if="props.node.isFolding"
-      :data-id="props.node.id"
-      @dragenter="onDragenter($event, props.node)"
+      v-if="state.tree.isFolding"
+      :data-id="state.tree.id"
+      @dragenter="onDragenter($event, state.tree)"
     )
       li(
-        v-for="childnode in props.node.subtrees",
+        v-for="childnode in state.tree.subtrees",
         :key="childnode.id", 
         :data-id="childnode.id", 
         :draggable="childnode.isDraggable"
         :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
-        @dragstart="onDragstart($event, props.node, childnode)"
+        @dragstart="onDragstart($event, state.tree, childnode)"
         @dragend="onDragend($event)"
       )
         .tree-item(
+          @click.prevent="onToggleEditing($event, childnode.id, true)"
           @mouseover.prevent.stop="onHover($event, childnode.id, true)"
           @mouseout.prevent.stop="onHover($event, childnode.id, false)"
         )
           i.mdi(
             v-if="childnode.subtrees.length > 0"
             :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
-            @click.prevent="onToggleCaret($event, childnode.id)"
+            @click.prevent.stop="onToggleFolding($event, childnode.id)"
           )
           i.mdi.mdi-circle-small(v-else)
-          slot(:node="childnode", :parent="props.node", :depth="1")
+          slot(:node="childnode", :parent="state.tree", :depth="1", :isHovering="childnode.isHovering", :isEditing="childnode.isEditing")
           span(v-if="slots.default === undefined") {{ childnode.name + '(' + childnode.id + ')' }}
         treenode(
           v-if="childnode.isFolding"
-          :parent="props.node",
+          :parent="state.tree",
           :node="childnode"
           :depth="2"
           @dragstart="onDragstart"
           @dragend="onDragend"
           @dragenter="onDragenter"
-          @toggle-caret="onToggleCaret"
-          @hover="onHover"
+          @toggle-folding="onToggleFolding"
+          @_toggle-editing="onToggleEditing"
+          @_hover="onHover"
         )
           template(v-if="slots.default !== undefined" v-slot="slotProps")
-            slot(:node="slotProps.node", :parent="slotProps.parent", :depth="slotProps.depth")
+            slot(
+              :node="slotProps.node",
+              :parent="slotProps.parent",
+              :depth="slotProps.depth",
+              :isHovering="slotProps.isHovering",
+              :isEditing="slotProps.isEditing"
+            )
         ul.subtree(v-else
           :data-id="childnode.id"
           @dragenter="onDragenter($event, childnode)"

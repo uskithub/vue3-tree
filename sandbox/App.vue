@@ -88,10 +88,6 @@ const onToggleFolding = (node: Treenode) => {
   node.isFolding = !node.isFolding;
 };
 
-const onHover = (node: Treenode, isHovering: boolean) => {
-  node.isHovering = isHovering;
-};
-
 const onClickExport = (event: MouseEvent, node: Treenode) => {
   console.log("export", node);
 };
@@ -104,7 +100,6 @@ main
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"
-    @hover="onHover"
   )
     template(v-slot="slotProps")
       template(v-if="slotProps.depth === 0")
