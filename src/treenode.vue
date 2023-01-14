@@ -20,20 +20,24 @@ const slots = useSlots();
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
 const emit = defineEmits<{
-  (e: "dragenter", event: MouseEvent, node: _Treenode): void,
-  (e: "dragstart", event: MouseEvent, parent: _Treenode, node: _Treenode): void,
-  (e: "dragend", event: MouseEvent, node: _Treenode): void,
+  (e: "dragenter", event: DragEvent, node: _Treenode): void,
+  (e: "dragstart", event: DragEvent, parent: _Treenode, node: _Treenode): void,
+  (e: "dragend", event: DragEvent, node: _Treenode): void,
+  (e: "dragenter-temporarily-open", event: DragEvent, node: _Treenode): void,
+  (e: "mouse-leave", event: MouseEvent, node: _Treenode): void,
   (e: "toggle-folding", event: MouseEvent, id: string): void
-  (e: "_toggle-editing", event: MouseEvent, id: string, isEditing: boolean): void
-  (e: "_hover", event: MouseEvent, id: string, isHovering: boolean): void
+  (e: "toggle-editing", event: MouseEvent, id: string, isEditing: boolean): void
+  (e: "hover", event: MouseEvent, id: string, isHovering: boolean): void
 }>();
 
-const onDragenter = (e: MouseEvent, _Treenode: _Treenode) => emit("dragenter", e, _Treenode);
-const onDragstart = (e: MouseEvent, parent: _Treenode, _Treenode: _Treenode) => emit("dragstart", e, parent, _Treenode);
-const onDragend = (e: MouseEvent, _Treenode: _Treenode) => emit("dragend", e, _Treenode);
+const onDragenter = (e: DragEvent, _Treenode: _Treenode) => emit("dragenter", e, _Treenode);
+const onDragstart = (e: DragEvent, parent: _Treenode, _Treenode: _Treenode) => emit("dragstart", e, parent, _Treenode);
+const onDragend = (e: DragEvent, _Treenode: _Treenode) => emit("dragend", e, _Treenode);
+const onDragenterTemporarilyOpen = (e: DragEvent, _Treenode: _Treenode) => emit("dragenter-temporarily-open", e, _Treenode);
+const onMouseleave = (e: MouseEvent, _Treenode: _Treenode) => emit("mouse-leave", e, _Treenode);
 const onToggleFolding = (e: MouseEvent, id: string) => emit("toggle-folding", e, id);
-const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => emit("_toggle-editing", e, id, isEditing);
-const onHover = (e: MouseEvent, id: string, isHovering: boolean) => emit("_hover", e, id, isHovering);
+const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing);
+const onHover = (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering);
 
 </script>
 
@@ -55,10 +59,12 @@ ul.subtree(
       @dblclick.prevent="onToggleEditing($event, childnode.id, true)"
       @mouseover.prevent.stop="onHover($event, childnode.id, true)"
       @mouseout.prevent.stop="onHover($event, childnode.id, false)"
+      @dragenter="onDragenterTemporarilyOpen($event, childnode)"
+      @mouseleave.stop="onMouseleave($event, childnode)"
     )
       i.mdi(
         v-if="childnode.subtrees.length > 0"
-        :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
+        :class="childnode.isFolding ? 'mdi-menu-right' : 'mdi-menu-down'"
         @click.prevent.stop="emit('toggle-folding', $event, childnode.id)"
       )
       i.mdi.mdi-circle-small(v-else)
@@ -71,16 +77,18 @@ ul.subtree(
         @blur="onToggleEditing($event, childnode.id, false)" 
       )
     treenode(
-      v-if="childnode.isFolding"
+      v-if="!childnode.isFolding"
       :parent="props.node",
       :node="childnode"
       :depth="props.depth+1"
       @dragstart="onDragstart"
       @dragend="onDragend"
       @dragenter="onDragenter"
+      @dragenter-temporarily-open="onDragenterTemporarilyOpen"
+      @mouse-leave="onMouseleave"
       @toggle-folding="onToggleFolding"
-      @_toggle-editing="onToggleEditing"
-      @_hover="onHover"
+      @toggle-editing="onToggleEditing"
+      @hover="onHover"
     )
       template(v-if="slots.default !== undefined" v-slot="slotProps")
         slot(
@@ -90,8 +98,4 @@ ul.subtree(
           :isHovering="slotProps.isHovering",
           :isEditing="slotProps.isEditing"
         )
-    ul.subtree(v-else
-      :data-id="childnode.id"
-      @dragenter.stop="onDragenter($event, childnode)"
-    )
 </template>

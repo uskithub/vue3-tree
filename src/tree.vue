@@ -99,11 +99,16 @@ const state = reactive<{
     node: Treenode;
     siblings: [HTMLElement | null, HTMLElement | null] | null;
   } | null;
+  temporarilyOpen: {
+    node: _Treenode;
+    timerId: number;
+  }  | null;
 }>({
   tree: deepCopy(props.node) as _Treenode
   , isModified: false
   , dragging: null
   , draggingOn: null
+  , temporarilyOpen: null
 });
 
 watch(props.node, (newVal) => {
@@ -118,7 +123,7 @@ watch(props.node, (newVal) => {
  * @param parent 
  * @param node 
  */
-const onDragstart = (e: MouseEvent, parent: Treenode, node: Treenode) => {
+const onDragstart = (e: MouseEvent, parent: _Treenode, node: _Treenode) => {
   const elem = e.target as HTMLElement
     , mirage = elem.cloneNode(true) as HTMLElement
     ;
@@ -139,7 +144,7 @@ const onDragstart = (e: MouseEvent, parent: Treenode, node: Treenode) => {
  * @param e 
  * @param node イベントを発火させたnode
  */
-const onDragenter = (e: DragEvent, node: Treenode) => {
+const onDragenter = (e: DragEvent, node: _Treenode) => {
 
   const elem = e.target as HTMLElement
     , id = elem.dataset.id
@@ -182,6 +187,35 @@ const onDragenter = (e: DragEvent, node: Treenode) => {
 
   elem.insertBefore(mirage, siblings[1]);
   state.draggingOn.siblings = siblings;
+};
+
+const onDragenterTemporarilyOpen = (e: DragEvent, node: _Treenode) => {
+  console.log("onDragenterTemporarilyOpen", node);
+  if (!node.isFolding) return; // 既に展開されている場合は何もしない
+  if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
+  if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
+  if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return; // 既にsetTimeout設定済の
+  state.temporarilyOpen = { node, timerId: window.setTimeout(() => {
+    console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
+    if (state.temporarilyOpen) {
+      state.temporarilyOpen.node.isFolding = false;
+      state.temporarilyOpen = null;
+    }
+  }, 800) };
+};
+
+/**
+ * dragleaveだと、子要素に入ったときも発火してキャンセルしてしまうのでmouseleaveを使っている。
+ * @param e 
+ * @param node 
+ */
+const onMouseleave = (e: DragEvent, node: _Treenode) => {
+  if (state.temporarilyOpen) {
+    if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
+      clearTimeout(state.temporarilyOpen.timerId);
+      state.temporarilyOpen = null;
+    }
+  }
 };
 
 /**
@@ -247,8 +281,6 @@ const onDragend = (e: MouseEvent) => {
 
   state.isModified = true;
 
-  console.log(state.tree);
-
   emit("arrange", node
     , { id: exParent.dataset.id, node: exPrarentNode }
     , { id: state.draggingOn.id, node: state.draggingOn.node }
@@ -298,7 +330,7 @@ ul.tree
     )
       i.mdi(
         v-if="state.tree.subtrees.length > 0"
-        :class="state.tree.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
+        :class="state.tree.isFolding ? 'mdi-menu-right' : 'mdi-menu-down'"
         @click.prevent.stop="onToggleFolding($event, state.tree.id)"
       )
       i.mdi.mdi-circle-small(v-else)
@@ -311,7 +343,7 @@ ul.tree
         @blur="onToggleEditing($event, state.tree.id, false)" 
       )
     ul.subtree(
-      v-if="state.tree.isFolding"
+      v-if="!state.tree.isFolding"
       :data-id="state.tree.id"
       :class="{ modified: state.isModified }"
       @dragenter="onDragenter($event, state.tree)"
@@ -329,10 +361,12 @@ ul.tree
           @dblclick.prevent="onToggleEditing($event, childnode.id, true)"
           @mouseover.prevent.stop="onHover($event, childnode.id, true)"
           @mouseout.prevent.stop="onHover($event, childnode.id, false)"
+          @dragenter="onDragenterTemporarilyOpen($event, childnode)"
+          @mouseleave.stop="onMouseleave($event, childnode)"
         )
           i.mdi(
             v-if="childnode.subtrees.length > 0"
-            :class="childnode.isFolding ? 'mdi-menu-down' : 'mdi-menu-right'"
+            :class="childnode.isFolding ? 'mdi-menu-right' : 'mdi-menu-down'"
             @click.prevent.stop="onToggleFolding($event, childnode.id)"
           )
           i.mdi.mdi-circle-small(v-else)
@@ -345,16 +379,18 @@ ul.tree
             @blur="onToggleEditing($event, childnode.id, false)" 
           )
         treenode(
-          v-if="childnode.isFolding"
+          v-if="!childnode.isFolding"
           :parent="state.tree",
           :node="childnode"
           :depth="2"
           @dragstart="onDragstart"
           @dragend="onDragend"
           @dragenter="onDragenter"
+          @dragenter-temporarily-open="onDragenterTemporarilyOpen"
+          @mouse-leave="onMouseleave"
           @toggle-folding="onToggleFolding"
-          @_toggle-editing="onToggleEditing"
-          @_hover="onHover"
+          @toggle-editing="onToggleEditing"
+          @hover="onHover"
         )
           template(v-if="slots.default !== undefined" v-slot="slotProps")
             slot(
@@ -364,10 +400,6 @@ ul.tree
               :isHovering="slotProps.isHovering",
               :isEditing="slotProps.isEditing"
             )
-        ul.subtree(v-else
-          :data-id="childnode.id"
-          @dragenter="onDragenter($event, childnode)"
-        )
 </template>
 
 <style lang="sass" scoped>

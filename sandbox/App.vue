@@ -66,74 +66,13 @@ const treeContent = {
     } as Treenode
   ]
   , isDraggable: true
-  , isFolding: true
+  , isFolding: false
 } as Treenode;
-
-const treeContent2 = {
-  id: "0"
-  , name: "rrRR"
-  , styleClass: null
-  , subtrees: [
-    {
-      id: "1"
-      , name: "subtree1"
-      , subtrees: [
-        {
-          id: "11"
-          , name: "subtree1-1"
-          , styleClass: null
-          , subtrees: []
-          , isDraggable: true
-          , isFolding: false
-        } as Treenode
-        , {
-          id: "12"
-          , name: "subtree1-2"
-          , subtrees: [
-            {
-              id: "121"
-              , name: "subtree1-2-1"
-              , styleClass: null
-              , subtrees: []
-              , isDraggable: true
-              , isFolding: true
-            } as Treenode
-          ]
-          , isDraggable: true
-          , isFolding: false
-        } as Treenode
-      ]
-      , isDraggable: true
-      , isFolding: true
-    } as Treenode
-    , {
-      id: "2"
-      , name: "subtree2"
-      , styleClass: null
-      , subtrees: []
-      , isDraggable: true
-      , isFolding: true
-    } as Treenode
-    , {
-      id: "3"
-      , name: "subtree3"
-      , styleClass: null
-      , subtrees: []
-      , isDraggable: false
-      , isFolding: true
-    } as Treenode
-  ]
-  , isDraggable: true
-  , isFolding: true
-} as Treenode;
-
 
 const state = reactive<{
   treeContent: Treenode;
-  reflesher: number;
 }>({
   treeContent
-  , reflesher: 0
 });
 
 const onArrange = (
@@ -155,7 +94,7 @@ const onArrange = (
   _from.subtrees = _from.subtrees.filter((subtree) => subtree.id !== node.id);
   // 新親に追加
   _to.subtrees.splice(index, 0, node);
-  _to.isFolding = true;
+  _to.isFolding = false;
 };
 
 const onToggleFolding = (id: string) => {
@@ -170,7 +109,6 @@ const onClickExport = (event: MouseEvent, node: Treenode) => {
 
 const onBlur = (event: FocusEvent) => {
   console.log("bb")
-  state.reflesher += 1;
 };
 
 </script>
@@ -186,7 +124,6 @@ main
   
   h1 using slot
   tree(
-    :key="state.reflesher"
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"
