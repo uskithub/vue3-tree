@@ -77,7 +77,7 @@ ul.subtree(
         @blur="onToggleEditing($event, childnode.id, false)" 
       )
     treenode(
-      v-if="!childnode.isFolding"
+      v-if="!childnode.isFolding || childnode.subtrees.length === 0"
       :parent="props.node",
       :node="childnode"
       :depth="props.depth+1"
