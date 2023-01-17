@@ -379,7 +379,7 @@ ul.tree
             @blur="onToggleEditing($event, childnode.id, false)" 
           )
         treenode(
-          v-if="!childnode.isFolding"
+          v-if="!childnode.isFolding || childnode.subtrees.length === 0"
           :parent="state.tree",
           :node="childnode"
           :depth="2"
@@ -407,7 +407,6 @@ ul.tree
   list-style-type: none
   margin: 0
   padding: 0 0 0 1em !important
-  border-top: 3px solid transparent
   border-left: 3px solid transparent
 
   :deep(.mdi):before
@@ -440,9 +439,8 @@ ul.tree
     .subtree
       list-style-type: none
       margin: 0 0 0 1em
-      padding: 0.5em 0 0 0.5em
+      padding: 0 0 0 0.5em
       min-height: 50px
-      border-top: 3px solid transparent
       border-left: 3px solid transparent
 
       &:empty
