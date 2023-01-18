@@ -7,11 +7,11 @@ const vFocus = {
   mounted: (el: HTMLElement) => el.focus()
 };
 
-
 const props = defineProps<{
   parent: _Treenode | undefined
   , node: _Treenode
   , depth: Number
+  , endEditingClosureBuilder: (node: _Treenode) => (newName: string) => void
 }>();
 
 const slots = useSlots();
@@ -68,7 +68,14 @@ ul.subtree(
         @click.prevent.stop="emit('toggle-folding', $event, childnode.id)"
       )
       i.mdi.mdi-circle-small(v-else)
-      slot(:node="childnode", :parent="props.node", :depth="props.depth", :isHovering="childnode.isHovering===true", :isEditing="childnode.isEditing===true")
+      slot(
+        :node="childnode",
+        :parent="props.node",
+        :depth="props.depth",
+        :isHovering="childnode.isHovering===true",
+        :isEditing="childnode.isEditing===true",
+        :endEditing="props.endEditingClosureBuilder(childnode)"
+      )
       span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
       input(
         v-if="slots.default === undefined && childnode.isEditing"
@@ -81,6 +88,7 @@ ul.subtree(
       :parent="props.node",
       :node="childnode"
       :depth="props.depth+1"
+      :endEditingClosureBuilder="props.endEditingClosureBuilder"
       @dragstart="onDragstart"
       @dragend="onDragend"
       @dragenter="onDragenter"
@@ -96,6 +104,7 @@ ul.subtree(
           :parent="slotProps.parent",
           :depth="slotProps.depth",
           :isHovering="slotProps.isHovering",
-          :isEditing="slotProps.isEditing"
+          :isEditing="slotProps.isEditing",
+          :endEditing="slotProps.endEditing"
         )
 </template>

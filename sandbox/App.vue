@@ -3,6 +3,7 @@
 import { findNodeById } from "../src/treenode";
 import type { Treenode } from "../src/treenode";
 import tree from "../src/tree.vue";
+import type { TreeProps } from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
 
@@ -107,8 +108,10 @@ const onClickExport = (event: MouseEvent, node: Treenode) => {
   console.log("export", node);
 };
 
-const onBlur = (event: FocusEvent) => {
-  console.log("bb")
+const onUpdateName = (id: string, newName: string) => {
+  const node = findNodeById(id, state.treeContent);
+  if (node === null) return;
+  node.name = newName;
 };
 
 </script>
@@ -120,6 +123,7 @@ main
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"
+    @update-name="onUpdateName"
   )
   
   h1 using slot
@@ -127,13 +131,14 @@ main
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"
+    @update-name="onUpdateName"
   )
     template(v-slot="slotProps")
       input(
         v-if="slotProps.isEditing"
         v-model="slotProps.node.name"
         v-focus
-        @blur="onBlur"
+        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(slotProps.node.name); }"
       )
       template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
         span.header {{ slotProps.depth }} : {{ slotProps.node.name }}

@@ -7,6 +7,15 @@ import { findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 
+export type TreeProps = {
+  node: Treenode
+  , parent?: Treenode
+  , depth: number
+  , isHovering: boolean
+  , isEditing: boolean
+  , endEditing?: (newName: string) => void
+};
+
 // custom directive for autofocus
 const vFocus = {
   mounted: (el: HTMLElement) => el.focus()
@@ -35,6 +44,7 @@ const emit = defineEmits<{
   (e: "dragenter", event: MouseEvent, node: Treenode): void,
   (e: "arrange", node: Treenode, from: { id: string, node: Treenode }, to: { id: string, node: Treenode }, index: number): void
   (e: "toggle-folding", id: string): void
+  (e: "update-name", id: string, newName: string): void
 }>();
 
 const deepCopy = <T>(obj: T): T => {
@@ -102,13 +112,15 @@ const state = reactive<{
   temporarilyOpen: {
     node: _Treenode;
     timerId: number;
-  }  | null;
+  } | null;
+  oldName: string | null;
 }>({
   tree: deepCopy(props.node) as _Treenode
   , isModified: false
   , dragging: null
   , draggingOn: null
   , temporarilyOpen: null
+  , oldName : null
 });
 
 watch(props.node, (newVal) => {
@@ -307,16 +319,40 @@ const onToggleFolding = (e: MouseEvent, id: string) => {
 };
 
 const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
-  console.log("editing", id, isEditing);
   const _node = findNodeById(id, state.tree);
   if (_node === null) return;
   _node.isEditing = isEditing;
+  if (isEditing) {
+    state.oldName = _node.name;
+  } else {
+    if (state.oldName === _node.name) { // 更新なし
+      state.oldName = null;
+      return;
+    } else { // 更新あり
+      state.oldName = null;
+      state.isModified = true;
+      emit("update-name", id, _node.name);
+    }
+  }
 };
 
 const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
   const _node = findNodeById(id, state.tree);
   if (_node === null) return;
   _node.isHovering = isHovering;
+};
+
+const endEditingClosureBuilder = (node: _Treenode): (newName: string) => void => {
+  return (newName: string) => {
+    node.isEditing = false;
+    if (state.oldName === newName) { // 更新なし
+      state.oldName = null;
+    } else { // 更新あり
+      state.oldName = null;
+      state.isModified = true;
+      emit("update-name", node.id, newName);
+    }
+  };
 };
 </script>
 
@@ -334,7 +370,13 @@ ul.tree
         @click.prevent.stop="onToggleFolding($event, state.tree.id)"
       )
       i.mdi.mdi-circle-small(v-else)
-      slot(:node="state.tree", :depth="0", :isHovering="state.tree.isHovering===true", :isEditing="state.tree.isEditing===true")
+      slot(
+        :node="state.tree", 
+        :depth="0", 
+        :isHovering="state.tree.isHovering===true", 
+        :isEditing="state.tree.isEditing===true",
+        :endEditing="endEditingClosureBuilder(state.tree)"
+      )
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(
         v-if="slots.default === undefined && state.tree.isEditing"
@@ -370,7 +412,14 @@ ul.tree
             @click.prevent.stop="onToggleFolding($event, childnode.id)"
           )
           i.mdi.mdi-circle-small(v-else)
-          slot(:node="childnode", :parent="state.tree", :depth="1", :isHovering="childnode.isHovering===true", :isEditing="childnode.isEditing===true")
+          slot(
+            :node="childnode", 
+            :parent="state.tree", 
+            :depth="1", 
+            :isHovering="childnode.isHovering===true", 
+            :isEditing="childnode.isEditing===true",
+            :endEditing="endEditingClosureBuilder(childnode)"
+          )
           span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
           input(
             v-if="slots.default === undefined && childnode.isEditing"
@@ -383,6 +432,7 @@ ul.tree
           :parent="state.tree",
           :node="childnode"
           :depth="2"
+          :endEditingClosureBuilder="endEditingClosureBuilder"
           @dragstart="onDragstart"
           @dragend="onDragend"
           @dragenter="onDragenter"
@@ -398,7 +448,8 @@ ul.tree
               :parent="slotProps.parent",
               :depth="slotProps.depth",
               :isHovering="slotProps.isHovering",
-              :isEditing="slotProps.isEditing"
+              :isEditing="slotProps.isEditing",
+              :endEditing="slotProps.endEditing"
             )
 </template>
 
