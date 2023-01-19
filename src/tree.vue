@@ -44,6 +44,7 @@ const emit = defineEmits<{
   (e: "dragenter", event: MouseEvent, node: Treenode): void,
   (e: "arrange", node: Treenode, from: { id: string, node: Treenode }, to: { id: string, node: Treenode }, index: number): void
   (e: "toggle-folding", id: string): void
+  (e: "toggle-editing", id: string, isEditing: boolean): void
   (e: "update-name", id: string, newName: string): void
 }>();
 
@@ -322,12 +323,12 @@ const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
   const _node = findNodeById(id, state.tree);
   if (_node === null) return;
   _node.isEditing = isEditing;
+  emit("toggle-editing", id, isEditing);
   if (isEditing) {
     state.oldName = _node.name;
   } else {
     if (state.oldName === _node.name) { // 更新なし
       state.oldName = null;
-      return;
     } else { // 更新あり
       state.oldName = null;
       state.isModified = true;
