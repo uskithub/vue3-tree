@@ -54,8 +54,20 @@ const emit = defineEmits<{
   <U, T extends Treenode<U>>(e: "update-node", node: T): void
 }>();
 
-const deepCopy = <T>(obj: T): T => {
-  return JSON.parse(JSON.stringify(obj)) as T;
+const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
+  // return JSON.parse(JSON.stringify(obj)) as T;
+
+  const _recursive = (node: T): Treenode<U> => {
+    return {
+      id: node.id
+      , name: node.name
+      , content: node.content
+      , subtrees: node.subtrees.map(n => _recursive(n))
+      , isDraggable: node.isDraggable
+      , isFolding: node.isFolding
+    } as Treenode<U>;
+  };
+  return _recursive(node);
 };
 
 /**
@@ -124,7 +136,7 @@ const state = reactive<{
   } | null;
   oldName: string | null;
 }>({
-  tree: deepCopy(props.node) as Treenode<any>
+  tree: deepCopy(props.node as Treenode<any>)
   , isModified: false
   , dragging: null
   , draggingOn: null
