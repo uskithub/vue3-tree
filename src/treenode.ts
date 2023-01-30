@@ -1,19 +1,20 @@
-export interface Treenode {
+export interface Treenode<T> {
     id: string;
     name: string;
     styleClass: object | null;
-    // content: object;
+    content: T;
     subtrees: this[];
     isDraggable: boolean;
     isFolding: boolean|undefined;
+    readonly isEditing?: Readonly<boolean>;
+    readonly isHovering?: Readonly<boolean>;
 };
 
-export interface _Treenode extends Treenode {
-    isEditing: boolean|undefined;
-    isHovering: boolean|undefined;
-};
+export type Mutable<Type> = {
+    -readonly [Property in keyof Type]: Type[Property];
+  };
 
-export function findNodeById<T extends Treenode>(id: string, node: T): T | null {
+export function findNodeById<U, T extends Treenode<U>>(id: string, node: T): T | null {
     if (node.id === id) {
         return node;
     }

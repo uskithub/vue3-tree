@@ -2,10 +2,41 @@
 
 import { findNodeById } from "../src/treenode";
 import type { Treenode } from "../src/treenode";
+import { genericTree } from "../src/genericTree";
 import tree from "../src/tree.vue";
 import type { TreeProps } from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
+
+
+type MyContent = {
+  id: string;
+  title: string;
+  type: string;
+  children: MyContent[];
+};
+
+class MyTreenode implements Treenode<MyContent> {
+  _content: MyContent;
+  isFolding: boolean;
+
+  constructor(content: MyContent) {
+    this._content = content;
+    this.isFolding = false;
+  }
+
+  get id(): string { return this._content.id; }
+  get name(): string { return this._content.title; }
+  get styleClass(): object | null { return { [this._content.type]: true }; }
+  get content(): MyContent { return this._content; }
+  get subtrees(): this[] {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this._content.children.map(c => new (this.constructor as any)(c));
+  }
+  get isDraggable(): boolean { return true; }
+}
+
+const MyTree = genericTree<MyContent, MyTreenode>();
 
 // custom directive for autofocus
 const vFocus = {
@@ -14,77 +45,58 @@ const vFocus = {
 
 const treeContent = {
   id: "0"
-  , name: "root"
-  , styleClass: null
-  , subtrees: [
+  , title: "root"
+  , children: [
     {
       id: "1"
-      , name: "subtree1"
-      , subtrees: [
+      , title: "subtree1"
+      , children: [
         {
           id: "11"
-          , name: "subtree1-1"
-          , styleClass: null
-          , subtrees: []
-          , isDraggable: true
-          , isFolding: false
-        } as Treenode
+          , title: "subtree1-1"
+          , children: [] as MyContent[]
+        } as MyContent
         , {
           id: "12"
-          , name: "subtree1-2"
-          , subtrees: [
+          , title: "subtree1-2"
+          , children: [
             {
               id: "121"
-              , name: "subtree1-2-1"
-              , styleClass: null
-              , subtrees: []
-              , isDraggable: true
-              , isFolding: true
-            } as Treenode
+              , title: "subtree1-2-1"
+              , children: [] as MyContent[]
+            } as MyContent
           ]
-          , isDraggable: true
-          , isFolding: false
-        } as Treenode
+        } as MyContent
       ]
-      , isDraggable: true
-      , isFolding: true
-    } as Treenode
+    } as MyContent
     , {
       id: "2"
-      , name: "subtree2"
-      , styleClass: null
-      , subtrees: []
-      , isDraggable: true
-      , isFolding: true
-    } as Treenode
+      , title: "subtree2"
+      , children: [] as MyContent[]
+    } as MyContent
     , {
       id: "3"
-      , name: "subtree3"
-      , styleClass: null
-      , subtrees: []
-      , isDraggable: false
-      , isFolding: true
-    } as Treenode
+      , title: "subtree3"
+      , children: [] as MyContent[]
+    } as MyContent
   ]
-  , isDraggable: true
-  , isFolding: false
-} as Treenode;
+} as MyContent;
 
 const state = reactive<{
-  treeContent: Treenode;
+  treeContent: MyTreenode;
 }>({
-  treeContent
+  treeContent: new MyTreenode(treeContent)
 });
 
 const onArrange = (
-  node: Treenode
+  node: MyTreenode
   , from: {
     id: string
-    , node: Treenode
+    , node: MyTreenode
   }
   , to: {
     id: string
-    , node: Treenode
+    , node: MyTreenode
   }
   , index: number
 ) => {
@@ -104,7 +116,7 @@ const onToggleFolding = (id: string) => {
   node.isFolding = !node.isFolding;
 };
 
-const onClickExport = (event: MouseEvent, node: Treenode) => {
+const onClickExport = (event: MouseEvent, node: MyTreenode) => {
   console.log("export", node);
 };
 
@@ -119,7 +131,7 @@ const onUpdateName = (id: string, newName: string) => {
 <template lang="pug">
 main
   h1 default
-  tree(
+  my-tree(
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"
@@ -127,7 +139,7 @@ main
   )
   
   h1 using slot
-  tree(
+  my-tree(
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"

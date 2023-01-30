@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { _Treenode } from "./treenode";
 import { useSlots } from "vue";
+import type { Treenode } from "./treenode";
 
 // custom directive for autofocus
 const vFocus = {
@@ -8,10 +8,10 @@ const vFocus = {
 };
 
 const props = defineProps<{
-  parent: _Treenode | undefined
-  , node: _Treenode
+  parent: Treenode<any> | undefined
+  , node: Treenode<any>
   , depth: Number
-  , endEditingClosureBuilder: (node: _Treenode) => (newName: string) => void
+  , endEditingClosureBuilder: <U, T extends Treenode<U>>(node: T) => (newName: string) => void
 }>();
 
 const slots = useSlots();
@@ -20,21 +20,21 @@ const slots = useSlots();
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
 const emit = defineEmits<{
-  (e: "dragenter", event: DragEvent, node: _Treenode): void,
-  (e: "dragstart", event: DragEvent, parent: _Treenode, node: _Treenode): void,
-  (e: "dragend", event: DragEvent, node: _Treenode): void,
-  (e: "dragenter-temporarily-open", event: DragEvent, node: _Treenode): void,
-  (e: "mouse-leave", event: MouseEvent, node: _Treenode): void,
+  <U, T extends Treenode<U>>(e: "dragenter", event: DragEvent, node: T): void,
+  <U, T extends Treenode<U>>(e: "dragstart", event: DragEvent, parent: T, node: T): void,
+  <U, T extends Treenode<U>>(e: "dragend", event: DragEvent, node: T): void,
+  <U, T extends Treenode<U>>(e: "dragenter-temporarily-open", event: DragEvent, node: T): void,
+    <U, T extends Treenode<U>>(e: "mouse-leave", event: MouseEvent, node: T): void,
   (e: "toggle-folding", event: MouseEvent, id: string): void
   (e: "toggle-editing", event: MouseEvent, id: string, isEditing: boolean): void
   (e: "hover", event: MouseEvent, id: string, isHovering: boolean): void
 }>();
 
-const onDragenter = (e: DragEvent, _Treenode: _Treenode) => emit("dragenter", e, _Treenode);
-const onDragstart = (e: DragEvent, parent: _Treenode, _Treenode: _Treenode) => emit("dragstart", e, parent, _Treenode);
-const onDragend = (e: DragEvent, _Treenode: _Treenode) => emit("dragend", e, _Treenode);
-const onDragenterTemporarilyOpen = (e: DragEvent, _Treenode: _Treenode) => emit("dragenter-temporarily-open", e, _Treenode);
-const onMouseleave = (e: MouseEvent, _Treenode: _Treenode) => emit("mouse-leave", e, _Treenode);
+const onDragenter = <U, T extends Treenode<U>>(e: DragEvent, _Treenode: T) => emit("dragenter", e, _Treenode);
+const onDragstart = <U, T extends Treenode<U>>(e: DragEvent, parent: T, _Treenode: T) => emit("dragstart", e, parent, _Treenode);
+const onDragend = <U, T extends Treenode<U>>(e: DragEvent, _Treenode: T) => emit("dragend", e, _Treenode);
+const onDragenterTemporarilyOpen = <U, T extends Treenode<U>>(e: DragEvent, _Treenode: T) => emit("dragenter-temporarily-open", e, _Treenode);
+const onMouseleave = <U, T extends Treenode<U>>(e: MouseEvent, _Treenode: T) => emit("mouse-leave", e, _Treenode);
 const onToggleFolding = (e: MouseEvent, id: string) => emit("toggle-folding", e, id);
 const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing);
 const onHover = (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering);
