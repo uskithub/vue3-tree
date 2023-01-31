@@ -1,4 +1,4 @@
-import { defineComponent, DefineComponent, h } from "vue";
+import { defineComponent, h } from "vue";
 import Tree from "./tree.vue";
 import { Treenode } from "./treenode";
 

@@ -21,19 +21,6 @@ const vFocus = {
   mounted: (el: HTMLElement) => el.focus()
 };
 
-// const props = withDefaults(defineProps<TreeProps<unknown, Treenode<unknown>>>(), {
-//   node: () => { 
-//     return {
-//       id: "0"
-//       , name: "default root"
-//       , content: null
-//       , subtrees: [] as Treenode<null>[]
-//       , isDraggable: true
-//       , isFolding: true
-//     } as Treenode<null>; 
-//   }
-// });
-
 const props = defineProps({
   node: {
     type: null as unknown as PropType<unknown>,
@@ -55,8 +42,6 @@ const emit = defineEmits<{
 }>();
 
 const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
-  // return JSON.parse(JSON.stringify(obj)) as T;
-
   const _recursive = (node: T): Treenode<U> => {
     return {
       id: node.id
@@ -113,8 +98,6 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
   return [parent.children[len - 1] as HTMLElement, null];
 };
 
-console.log("props", props.node);
-
 const state = reactive<{
   tree: Treenode<any>;
   isModified: boolean;
@@ -144,12 +127,9 @@ const state = reactive<{
   , oldName : null
 });
 
-// TODO: deepCopyだとgetterの値が取れない
-console.log("state", state.tree);
-
 watch(props.node, <U, T extends Treenode<U>>(newVal: T) => {
   state.isModified = false;
-  state.tree = deepCopy(newVal) as T;
+  state.tree = deepCopy(newVal);
 });
 
 /**
@@ -312,16 +292,11 @@ const onDragend = (e: MouseEvent) => {
   exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
   // 新親に追加
   state.draggingOn.node.subtrees.splice(index, 0, node);
-  state.draggingOn.node.isFolding = true;
+  state.draggingOn.node.isFolding = false;
 
   state.isModified = true;
 
-  emit("arrange", node
-    , { id: exParent.dataset.id, node: exPrarentNode }
-    , { id: state.draggingOn.id, node: state.draggingOn.node }
-    , index
-  );
-
+  // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
   nextTick()
     .then(() => {
       if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
@@ -329,6 +304,12 @@ const onDragend = (e: MouseEvent) => {
       newParent.classList.remove("drop-target");
       newParent.removeEventListener("dragover", onDragover);
     });
+
+  emit("arrange", node
+    , { id: exParent.dataset.id, node: exPrarentNode }
+    , { id: state.draggingOn.id, node: state.draggingOn.node }
+    , index
+  );
 
   state.dragging = null;
   state.draggingOn = null;

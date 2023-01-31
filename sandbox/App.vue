@@ -17,7 +17,7 @@ type MyContent = {
 };
 
 class MyTreenode implements Treenode<MyContent> {
-  _content: MyContent;
+  private _content: MyContent;
   isFolding: boolean;
 
   constructor(content: MyContent) {
@@ -104,9 +104,9 @@ const onArrange = (
   const _to = findNodeById(to.id, state.treeContent);
   if (_from === null || _to === null) return;
   // 元親から削除
-  _from.subtrees = _from.subtrees.filter((subtree) => subtree.id !== node.id);
+  _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
   // 新親に追加
-  _to.subtrees.splice(index, 0, node);
+  _to.content.children.splice(index, 0, node.content);
   _to.isFolding = false;
 };
 
@@ -123,7 +123,7 @@ const onClickExport = (event: MouseEvent, node: MyTreenode) => {
 const onUpdateName = (id: string, newName: string) => {
   const node = findNodeById(id, state.treeContent);
   if (node === null) return;
-  node.name = newName;
+  node.content.title = newName;
 };
 
 </script>
