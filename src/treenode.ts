@@ -1,5 +1,5 @@
 export interface Treenode<T> {
-    id: string;
+    readonly id: Readonly<string>;
     name: string;
     styleClass: object | null;
     content: T;

@@ -1,4 +1,5 @@
 import { defineComponent, h } from "vue";
+import type { DefineComponent } from "vue";
 import Tree from "./tree.vue";
 import { Treenode } from "./treenode";
 
@@ -10,7 +11,7 @@ export interface GenericTreeProps<U, T extends Treenode<U>> extends Omit<Extract
     node: T
 };
 
-export function genericTree<U, T extends Treenode<U>>() {
+export function genericTree<U, T extends Treenode<U>>(): DefineComponent<GenericTreeProps<U, T>> {
     return defineComponent((props: GenericTreeProps<U, T>) => {
         return () => h(Tree, props);
     });

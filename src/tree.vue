@@ -127,7 +127,7 @@ const state = reactive<{
   , oldName : null
 });
 
-watch(props.node, <U, T extends Treenode<U>>(newVal: T) => {
+watch(props.node as object, <U, T extends Treenode<U>>(newVal: T) => {
   state.isModified = false;
   state.tree = deepCopy(newVal);
 });
