@@ -46,6 +46,7 @@ const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
     return {
       id: node.id
       , name: node.name
+      , styleClass: node.styleClass
       , content: node.content
       , subtrees: node.subtrees.map(n => _recursive(n))
       , isDraggable: node.isDraggable
