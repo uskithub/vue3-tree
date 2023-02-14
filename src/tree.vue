@@ -7,6 +7,8 @@ import { nextTick, reactive, useSlots, watch } from "vue";
 import type { PropType } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 
+import rdfc from "rfdc";
+
 export type TreenodeProps<U, T extends Treenode<U>> = {
   node: T
   , parent?: T
@@ -41,9 +43,10 @@ const emit = defineEmits<{
   <U, T extends Treenode<U>>(e: "update-node", node: T): void
 }>();
 
+const _deepCopy = rdfc();
 const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
   const _recursive = (node: T): Treenode<U> => {
-    return {
+    const tmp = {
       id: node.id
       , name: node.name
       , styleClass: node.styleClass
@@ -52,6 +55,7 @@ const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
       , isDraggable: node.isDraggable
       , isFolding: node.isFolding
     } as Treenode<U>;
+    return _deepCopy(tmp);
   };
   return _recursive(node);
 };
@@ -118,14 +122,14 @@ const state = reactive<{
     node: Treenode<any>;
     timerId: number;
   } | null;
-  oldName: string | null;
+  reserve: Treenode<any> | null;
 }>({
   tree: deepCopy(props.node as Treenode<any>)
   , isModified: false
   , dragging: null
   , draggingOn: null
   , temporarilyOpen: null
-  , oldName : null
+  , reserve : null
 });
 
 watch(props.node as object, <U, T extends Treenode<U>>(newVal: T) => {
@@ -330,12 +334,13 @@ const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
   mutableNode.isEditing = isEditing;
   emit("toggle-editing", id, isEditing);
   if (isEditing) {
-    state.oldName = _node.name;
-  } else {
-    if (state.oldName === _node.name) { // 更新なし
-      state.oldName = null;
+    state.reserve = deepCopy(_node);
+  } else { // ここは slot を使わないときしか来ないので、name での判断でOK
+    if (state.reserve === null) return;
+    if (state.reserve.name === _node.name) { // 更新なし
+      state.reserve = null;
     } else { // 更新あり
-      state.oldName = null;
+      state.reserve = null;
       state.isModified = true;
       emit("update-node", _node);
     }
@@ -354,9 +359,15 @@ const endEditingClosureBuilder = <U, T extends Treenode<U>>(node: T): (shouldCom
     const mutableNode = node as Mutable<T>;
     mutableNode.isEditing = false;
     if (shouldCommit && newValue) { // 更新あり
+      state.reserve = null;
       state.isModified = true;
       emit("update-node", newValue);
     } else { // 更新なし
+      if (state.reserve === null) return;
+      Object.keys(state.reserve).forEach(key => {
+        mutableNode[key] = state.reserve[key];
+      });
+      state.reserve = null;
     }
   };
 };
