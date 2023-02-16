@@ -8,6 +8,7 @@ export interface Treenode<T> {
     isFolding: boolean|undefined;
     readonly isEditing?: Readonly<boolean>;
     readonly isHovering?: Readonly<boolean>;
+    update: (newContent: T) => void;
 };
 
 export type Mutable<Type> = {
@@ -20,7 +21,7 @@ export function findNodeById<U, T extends Treenode<U>>(id: string, node: T): T |
     }
 
     for (const subtree of node.subtrees) {
-        const found = findNodeById(id, subtree);
+        const found = findNodeById<U, T>(id, subtree);
         if (found) {
             return found;
         }

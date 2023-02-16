@@ -34,6 +34,10 @@ class MyTreenode implements Treenode<MyContent> {
     return this._content.children.map(c => new (this.constructor as any)(c));
   }
   get isDraggable(): boolean { return true; }
+  
+  update(newContent: MyContent) {
+    this._content = newContent;
+  }
 }
 
 const MyTree = genericTree<MyContent, MyTreenode>();

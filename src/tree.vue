@@ -361,11 +361,11 @@ const endEditingClosureBuilder = <U, T extends Treenode<U>>(node: T): (shouldCom
     if (shouldCommit && newValue) { // 更新あり
       state.reserve = null;
       state.isModified = true;
-      emit("update-node", newValue);
+      emit<U, T>("update-node", newValue);
     } else { // 更新なし
       if (state.reserve === null) return;
-      Object.keys(state.reserve).forEach(key => {
-        mutableNode[key] = state.reserve[key];
+      (Object.keys(state.reserve) as (keyof T)[]).forEach(key => {  
+        mutableNode[key] = (state.reserve as T)[key];
       });
       state.reserve = null;
     }
