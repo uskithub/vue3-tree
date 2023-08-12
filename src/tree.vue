@@ -3,8 +3,8 @@
 import treenode from "./treenode.vue";
 import type { Treenode, Mutable } from "./treenode";
 import { findNodeById } from "./treenode";
-import { nextTick, reactive, useSlots, watch } from "vue";
-import type { PropType } from "vue";
+import { nextTick, reactive, ref, useSlots, watch } from "vue";
+import type { PropType, Ref } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 import rdfc from "rfdc";
 
@@ -98,6 +98,12 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
     return [parent.children[len - 1] as HTMLElement, null];
 };
 
+const hoge1 = ref<T>(props.node);
+const hoge2 = ref<T>(props.node) as Ref<T>;
+
+const hoge3 = reactive<{ tree: T; }>({ tree: props.node });
+const hoge4 = reactive<{ tree: T; }>({ tree: props.node }) as { tree: Ref<T>; };
+
 const state = reactive<{
     tree : T;
     isModified : boolean;
@@ -125,7 +131,27 @@ const state = reactive<{
   , draggingOn: null
   , temporarilyOpen: null
   , reserve : null
-});
+}) as { // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
+    tree : T; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
+    isModified : boolean;
+    dragging : {
+        elem : HTMLElement;
+        parent : T;
+        node : T;
+        mirage : HTMLElement;
+    } | null;
+    draggingOn : {
+        elem : HTMLElement;
+        id : string;
+        node : T;
+        siblings : [HTMLElement | null, HTMLElement | null] | null;
+    } | null;
+    temporarilyOpen : {
+        node : T;
+        timerId : number;
+    } | null;
+    reserve: T | null;
+};
 
 watch(props.node, (newVal: T) => {
   state.isModified = false;
