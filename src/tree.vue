@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="U, T extends Treenode<U>">
 // view
 import treenode from "./treenode.vue";
 import type { Treenode, Mutable } from "./treenode";
@@ -6,29 +6,25 @@ import { findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots, watch } from "vue";
 import type { PropType } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
-
 import rdfc from "rfdc";
 
-export type TreenodeProps<U, T extends Treenode<U>> = {
-  node: T
-  , parent?: T
-  , depth: number
-  , isHovering: boolean
-  , isEditing: boolean
-  , endEditing: (shouldCommit: boolean, newValue?: T) => void
-};
+// export type TreenodeProps<U, T extends Treenode<U>> = {
+//     node : T;
+//     parent? : T;
+//     depth : number;
+//     isHovering : boolean;
+//     isEditing : boolean;
+//     endEditing : (shouldCommit: boolean, newValue?: T) => void;
+// };
 
 // custom directive for autofocus
 const vFocus = {
-  mounted: (el: HTMLElement) => el.focus()
+    mounted: (el: HTMLElement) => el.focus()
 };
 
-const props = defineProps({
-  node: {
-    type: null as unknown as PropType<unknown>,
-    required: true,
-  }
-});
+const props = defineProps<{
+    node : T
+}>();
 
 const slots = useSlots();
 
@@ -36,28 +32,28 @@ const slots = useSlots();
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
 const emit = defineEmits<{
-  <U, T extends Treenode<U>>(e: "dragenter", event: MouseEvent, node: T): void,
-  <U, T extends Treenode<U>>(e: "arrange", node: T, from: { id: string, node: T }, to: { id: string, node: T }, index: number): void
-  (e: "toggle-folding", id: string): void
-  (e: "toggle-editing", id: string, isEditing: boolean): void
-  <U, T extends Treenode<U>>(e: "update-node", node: T): void
+    (e: "dragenter", event: MouseEvent, node: T) : void;
+    (e: "arrange", node: T, from: { id: string; node: T; }, to: { id: string; node: T; }, index: number) : void;
+    (e: "toggle-folding", id: string): void;
+    (e: "toggle-editing", id: string, isEditing: boolean) : void;
+    (e: "update-node", node: T) : void;
 }>();
 
 const _deepCopy = rdfc();
-const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
-  const _recursive = (node: T): Treenode<U> => {
-    const tmp = {
-      id: node.id
-      , name: node.name
-      , styleClass: node.styleClass
-      , content: node.content
-      , subtrees: node.subtrees.map(n => _recursive(n))
-      , isDraggable: node.isDraggable
-      , isFolding: node.isFolding
-    } as Treenode<U>;
-    return _deepCopy(tmp);
-  };
-  return _recursive(node);
+const deepCopy = (node: T): T => {
+    const _recursive = (node: T): T => {
+        const tmp = {
+            id: node.id
+            , name: node.name
+            , styleClass: node.styleClass
+            , content: node.content
+            , subtrees: node.subtrees.map(n => _recursive(n))
+            , isDraggable: node.isDraggable
+            , isFolding: node.isFolding
+        } as T;
+        return _deepCopy(tmp);
+    };
+    return _recursive(node);
 };
 
 /**
@@ -66,19 +62,18 @@ const deepCopy = <U, T extends Treenode<U>>(node: T): Treenode<U> => {
  * @param ofElem 
  */
 const isMyselfOrDescendant = (targetUl: HTMLElement, ofElem: HTMLElement) => {
-  if (targetUl === ofElem) {
-    return true;
-  }
-  if (ofElem.childNodes) {
-    for (const i in ofElem.childNodes) {
-      const child = ofElem.childNodes[i];
-      if (child instanceof HTMLElement)
-        if (child instanceof HTMLElement && isMyselfOrDescendant(targetUl, child)) {
-          return true;
+    if (targetUl === ofElem) {
+        return true;
+    }
+    if (ofElem.childNodes) {
+        for (const i in ofElem.childNodes) {
+            const child = ofElem.childNodes[i];
+            if (child instanceof HTMLElement && isMyselfOrDescendant(targetUl, child)) {
+                return true;
+            }
         }
     }
-  }
-  return false;
+    return false;
 };
 
 /**
@@ -87,44 +82,44 @@ const isMyselfOrDescendant = (targetUl: HTMLElement, ofElem: HTMLElement) => {
  * @param y 
  */
 const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement | null, HTMLElement | null] => {
-  const len = parent.children.length;
-  for (let i = 0; i < len; i++) {
-    const child = parent.children[i] as HTMLElement;
-    const rect = child.getBoundingClientRect();
-    if ((rect.top + rect.height / 2) > y) {
-      if (i > 0) {
-        const before = parent.children[i - 1] as HTMLElement;
-        return [before, child];
-      } else {
-        return [null, child];
-      }
+    const len = parent.children.length;
+    for (let i = 0; i < len; i++) {
+        const child = parent.children[i] as HTMLElement;
+        const rect = child.getBoundingClientRect();
+        if ((rect.top + rect.height / 2) > y) {
+            if (i > 0) {
+                const before = parent.children[i - 1] as HTMLElement;
+                return [before, child];
+            } else {
+                return [null, child];
+            }
+        }
     }
-  }
-  return [parent.children[len - 1] as HTMLElement, null];
+    return [parent.children[len - 1] as HTMLElement, null];
 };
 
 const state = reactive<{
-  tree: Treenode<any>;
-  isModified: boolean;
-  dragging: {
-    elem: HTMLElement;
-    parent: Treenode<any>;
-    node: Treenode<any>;
-    mirage: HTMLElement;
-  } | null;
-  draggingOn: {
-    elem: HTMLElement;
-    id: string;
-    node: Treenode<any>;
-    siblings: [HTMLElement | null, HTMLElement | null] | null;
-  } | null;
-  temporarilyOpen: {
-    node: Treenode<any>;
-    timerId: number;
-  } | null;
-  reserve: Treenode<any> | null;
+    tree : T;
+    isModified : boolean;
+    dragging : {
+        elem : HTMLElement;
+        parent : T;
+        node : T;
+        mirage : HTMLElement;
+    } | null;
+    draggingOn : {
+        elem : HTMLElement;
+        id : string;
+        node : T;
+        siblings : [HTMLElement | null, HTMLElement | null] | null;
+    } | null;
+    temporarilyOpen : {
+        node : T;
+        timerId : number;
+    } | null;
+    reserve: T | null;
 }>({
-  tree: deepCopy(props.node as Treenode<any>)
+  tree: deepCopy(props.node)
   , isModified: false
   , dragging: null
   , draggingOn: null
@@ -132,7 +127,7 @@ const state = reactive<{
   , reserve : null
 });
 
-watch(props.node as object, <U, T extends Treenode<U>>(newVal: T) => {
+watch(props.node, (newVal: T) => {
   state.isModified = false;
   state.tree = deepCopy(newVal);
 });
@@ -143,19 +138,18 @@ watch(props.node as object, <U, T extends Treenode<U>>(newVal: T) => {
  * @param parent 
  * @param node 
  */
-const onDragstart = <U, T extends Treenode<U>>(e: MouseEvent, parent: T, node: T) => {
-  const elem = e.target as HTMLElement
-    , mirage = elem.cloneNode(true) as HTMLElement
-    ;
-  elem.classList.add("dragging");
-  mirage.classList.add("mirage");
-
-  state.dragging = {
-    elem
-    , parent
-    , node
-    , mirage
-  };
+const onDragstart = (e: MouseEvent, parent: T, node: T) => {
+    const elem = e.target as HTMLElement
+        , mirage = elem.cloneNode(true) as HTMLElement;
+    elem.classList.add("dragging");
+    mirage.classList.add("mirage");
+  
+    state.dragging = {
+        elem
+        , parent
+        , node
+        , mirage
+    };
 }
 
 /**
@@ -164,64 +158,62 @@ const onDragstart = <U, T extends Treenode<U>>(e: MouseEvent, parent: T, node: T
  * @param e 
  * @param node イベントを発火させたnode
  */
-const onDragenter = <U, T extends Treenode<U>>(e: DragEvent, node: T) => {
+const onDragenter = (e: DragEvent, node: T) => {
+    const elem = e.target as HTMLElement
+        , id = elem.dataset.id
+        , y = e.clientY;
 
-  const elem = e.target as HTMLElement
-    , id = elem.dataset.id
-    , y = e.clientY
-    ;
+    // イベントを発火させたULへのdragenterのみ処理する
+    // イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれている
+    if (id !== node.id) return;
 
-  // イベントを発火させたULへのdragenterのみ処理する
-  // イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれている
-  if (id !== node.id) return;
+    if (id === undefined || state.dragging === null) return;
 
-  if (id === undefined || state.dragging === null) return;
+    // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
+    if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
 
-  // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
-  if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
+    if (state.draggingOn) {
+        state.draggingOn.elem.classList.remove("drop-target");
+        state.draggingOn.elem.removeEventListener("dragover", onDragover);
+        state.draggingOn = null;
+    }
 
-  if (state.draggingOn) {
-    state.draggingOn.elem.classList.remove("drop-target");
-    state.draggingOn.elem.removeEventListener("dragover", onDragover);
-    state.draggingOn = null;
-  }
+    elem.classList.add("drop-target");
+    elem.addEventListener("dragover", onDragover);
 
-  elem.classList.add("drop-target");
-  elem.addEventListener("dragover", onDragover);
+    state.draggingOn = {
+        elem
+        , id
+        , node
+        , siblings: null
+    };
 
-  state.draggingOn = {
-    elem
-    , id
-    , node
-    , siblings: null
-  };
+    const mirage = state.dragging.mirage;
+    const siblings = getInsertingIntersiblings(elem, y);
 
-  const mirage = state.dragging.mirage;
-  const siblings = getInsertingIntersiblings(elem, y);
+    // 既にmirageがある場合は何もしない
+    if (siblings.includes(mirage)) return;
 
-  // 既にmirageがある場合は何もしない
-  if (siblings.includes(mirage)) return;
+    if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+    if (siblings.includes(state.dragging.elem)) return;
 
-  if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-  if (siblings.includes(state.dragging.elem)) return;
-
-  elem.insertBefore(mirage, siblings[1]);
-  state.draggingOn.siblings = siblings;
+    elem.insertBefore(mirage, siblings[1]);
+    state.draggingOn.siblings = siblings;
 };
 
-const onDragenterTemporarilyOpen = <U, T extends Treenode<U>>(e: DragEvent, node: T) => {
-  console.log("onDragenterTemporarilyOpen", node);
-  if (!node.isFolding) return; // 既に展開されている場合は何もしない
-  if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
-  if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
-  if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return; // 既にsetTimeout設定済の
-  state.temporarilyOpen = { node, timerId: window.setTimeout(() => {
-    console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
-    if (state.temporarilyOpen) {
-      state.temporarilyOpen.node.isFolding = false;
-      state.temporarilyOpen = null;
-    }
-  }, 800) };
+const onDragenterTemporarilyOpen = (e: DragEvent, node: T) => {
+    console.log("onDragenterTemporarilyOpen", node);
+    if (!node.isFolding) return; // 既に展開されている場合は何もしない
+    if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
+    if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
+    if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return; // 既にsetTimeout設定済の
+    state.temporarilyOpen = { node, timerId: window.setTimeout(() => {
+        console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
+        if (state.temporarilyOpen) {
+            state.temporarilyOpen.node.isFolding = false;
+            state.temporarilyOpen = null;
+        }
+    }, 800) };
 };
 
 /**
@@ -229,13 +221,13 @@ const onDragenterTemporarilyOpen = <U, T extends Treenode<U>>(e: DragEvent, node
  * @param e 
  * @param node 
  */
-const onMouseleave = <U, T extends Treenode<U>>(e: DragEvent, node: T) => {
-  if (state.temporarilyOpen) {
-    if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
-      clearTimeout(state.temporarilyOpen.timerId);
-      state.temporarilyOpen = null;
+const onMouseleave = (e: DragEvent, node: T) => {
+    if (state.temporarilyOpen) {
+        if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
+            clearTimeout(state.temporarilyOpen.timerId);
+            state.temporarilyOpen = null;
+        }
     }
-  }
 };
 
 /**
@@ -243,133 +235,132 @@ const onMouseleave = <U, T extends Treenode<U>>(e: DragEvent, node: T) => {
  * @param e 
  */
 const onDragover = (e: MouseEvent) => {
-  const elem = e.currentTarget as HTMLElement
-    , y = e.clientY
-    ;
+    const elem = e.currentTarget as HTMLElement
+        , y = e.clientY;
 
-  if (state.dragging === null) return;
+    if (state.dragging === null) return;
 
-  // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
-  if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
+    // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
+    if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
 
-  const mirage = state.dragging.mirage;
-  const siblings = getInsertingIntersiblings(elem, y);
+    const mirage = state.dragging.mirage;
+    const siblings = getInsertingIntersiblings(elem, y);
 
-  // 既にmirageがある場合は何もしない
-  if (siblings.includes(mirage)) return;
-  // siblingsの片割れがdraggingの場合は何もしない
-  if (siblings.includes(state.dragging.elem)) return;
+    // 既にmirageがある場合は何もしない
+    if (siblings.includes(mirage)) return;
+    // siblingsの片割れがdraggingの場合は何もしない
+    if (siblings.includes(state.dragging.elem)) return;
 
-  // siblingsが変わった場合
-  if (state.draggingOn && state.draggingOn.siblings !== siblings) {
-    if (mirage.parentNode) {
-      mirage.parentNode.removeChild(mirage);
+    // siblingsが変わった場合
+    if (state.draggingOn && state.draggingOn.siblings !== siblings) {
+        if (mirage.parentNode) {
+            mirage.parentNode.removeChild(mirage);
+        }
+        elem.insertBefore(mirage, siblings[1]);
+        state.draggingOn.siblings = siblings;
     }
-    elem.insertBefore(mirage, siblings[1]);
-    state.draggingOn.siblings = siblings;
-  }
 };
 
 const onDragend = (e: MouseEvent) => {
-  const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
-  elem.classList.remove("dragging");
+    const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
+    elem.classList.remove("dragging");
 
-  if (state.dragging === null || state.draggingOn === null) return;
+    if (state.dragging === null || state.draggingOn === null) return;
 
-  const node = state.dragging.node;
-  const exPrarentNode = state.dragging.parent;
-  const mirage = state.dragging.mirage;
-  const exParent = elem.parentNode as HTMLElement;
-  const newParent = state.draggingOn.elem;
+    const node = state.dragging.node;
+    const exPrarentNode = state.dragging.parent;
+    const mirage = state.dragging.mirage;
+    const exParent = elem.parentNode as HTMLElement;
+    const newParent = state.draggingOn.elem;
 
-  console.log(state.draggingOn)
+    console.log(state.draggingOn)
 
-  if (exParent.dataset.id === undefined) return;
+    if (exParent.dataset.id === undefined) return;
 
-  let index = 0;
-  for (let i = 0, len = newParent.children.length; i < len; i++) {
-    const child = newParent.children[i];
-    if (child === mirage) break;
-    if (child !== elem) index++;
-  }
+    let index = 0;
+    for (let i = 0, len = newParent.children.length; i < len; i++) {
+        const child = newParent.children[i];
+        if (child === mirage) break;
+        if (child !== elem) index++;
+    }
 
-  // 元親から削除
-  exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
-  // 新親に追加
-  state.draggingOn.node.subtrees.splice(index, 0, node);
-  state.draggingOn.node.isFolding = false;
+    // 元親から削除
+    exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
+    // 新親に追加
+    state.draggingOn.node.subtrees.splice(index, 0, node);
+    state.draggingOn.node.isFolding = false;
 
-  state.isModified = true;
+    state.isModified = true;
 
-  // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
-  nextTick()
-    .then(() => {
-      if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+    // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
+    nextTick()
+        .then(() => {
+            if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
 
-      newParent.classList.remove("drop-target");
-      newParent.removeEventListener("dragover", onDragover);
-    });
+            newParent.classList.remove("drop-target");
+            newParent.removeEventListener("dragover", onDragover);
+        });
 
-  emit("arrange", node
-    , { id: exParent.dataset.id, node: exPrarentNode }
-    , { id: state.draggingOn.id, node: state.draggingOn.node }
-    , index
-  );
+    emit("arrange", node
+        , { id: exParent.dataset.id, node: exPrarentNode }
+        , { id: state.draggingOn.id, node: state.draggingOn.node }
+        , index
+    );
 
-  state.dragging = null;
-  state.draggingOn = null;
+    state.dragging = null;
+    state.draggingOn = null;
 }
 
 const onToggleFolding = (e: MouseEvent, id: string) => {
-  const _node = findNodeById(id, state.tree);
-  if (_node === null) return;
-  _node.isFolding = !_node.isFolding;
-  emit("toggle-folding", id);
+    const _node = findNodeById(id, state.tree);
+    if (_node === null) return;
+    _node.isFolding = !_node.isFolding;
+    emit("toggle-folding", id);
 };
 
 const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
-  const _node = findNodeById(id, state.tree);
-  if (_node === null) return;
-  const mutableNode = _node as Mutable<any>;
-  mutableNode.isEditing = isEditing;
-  emit("toggle-editing", id, isEditing);
-  if (isEditing) {
-    state.reserve = deepCopy(_node);
-  } else { // ここは slot を使わないときしか来ないので、name での判断でOK
-    if (state.reserve === null) return;
-    if (state.reserve.name === _node.name) { // 更新なし
-      state.reserve = null;
-    } else { // 更新あり
-      state.reserve = null;
-      state.isModified = true;
-      emit("update-node", _node);
+    const _node = findNodeById(id, state.tree);
+    if (_node === null) return;
+    const mutableNode = _node as Mutable<any>;
+    mutableNode.isEditing = isEditing;
+    emit("toggle-editing", id, isEditing);
+    if (isEditing) {
+        state.reserve = deepCopy(_node);
+    } else { // ここは slot を使わないときしか来ないので、name での判断でOK
+        if (state.reserve === null) return;
+        if (state.reserve.name === _node.name) { // 更新なし
+              state.reserve = null;
+        } else { // 更新あり
+            state.reserve = null;
+            state.isModified = true;
+            emit("update-node", _node);
+        }
     }
-  }
 };
 
 const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
-  const _node = findNodeById(id, state.tree);
-  if (_node === null) return;
-  const mutableNode = _node as Mutable<any>;
-  mutableNode.isHovering = isHovering;
+    const _node = findNodeById(id, state.tree);
+    if (_node === null) return;
+    const mutableNode = _node as Mutable<any>;
+    mutableNode.isHovering = isHovering;
 };
 
-const endEditingClosureBuilder = <U, T extends Treenode<U>>(node: T): (shouldCommit: boolean, newValue?: T) => void => {
-  return (shouldCommit: boolean, newValue?: T) => {
-    const mutableNode = node as Mutable<T>;
-    mutableNode.isEditing = false;
-    if (shouldCommit && newValue) { // 更新あり
-      state.reserve = null;
-      state.isModified = true;
-      emit<U, T>("update-node", newValue);
-    } else { // 更新なし
-      if (state.reserve === null) return;
-      (Object.keys(state.reserve) as (keyof T)[]).forEach(key => {  
-        mutableNode[key] = (state.reserve as T)[key];
-      });
-      state.reserve = null;
-    }
-  };
+const endEditingClosureBuilder = (node: T): (shouldCommit: boolean, newValue?: T) => void => {
+    return (shouldCommit: boolean, newValue?: T) => {
+        const mutableNode = node as Mutable<T>;
+        mutableNode.isEditing = false;
+        if (shouldCommit && newValue) { // 更新あり
+            state.reserve = null;
+            state.isModified = true;
+            emit("update-node", newValue);
+        } else { // 更新なし
+            if (state.reserve === null) return;
+            (Object.keys(state.reserve) as (keyof T)[]).forEach(key => {  
+                mutableNode[key] = (state.reserve as T)[key];
+            });
+            state.reserve = null;
+        }
+    };
 };
 </script>
 

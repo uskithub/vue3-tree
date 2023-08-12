@@ -2,7 +2,6 @@
 
 import { findNodeById } from "../src/treenode";
 import type { Treenode } from "../src/treenode";
-import { genericTree } from "../src/genericTree";
 import tree from "../src/tree.vue";
 import type { TreeProps } from "../src/tree.vue";
 
@@ -10,41 +9,39 @@ import { reactive } from "@vue/reactivity";
 
 
 type MyContent = {
-  id: string;
-  title: string;
-  type: string;
-  children: MyContent[];
+    id : string;
+    title : string;
+    type : string;
+    children : MyContent[];
 };
 
 class MyTreenode implements Treenode<MyContent> {
-  private _content: MyContent;
-  isFolding: boolean;
+    private _content: MyContent;
+    isFolding: boolean;
 
-  constructor(content: MyContent) {
-    this._content = content;
-    this.isFolding = false;
-  }
+    constructor(content: MyContent) {
+        this._content = content;
+        this.isFolding = false;
+    }
 
-  get id(): string { return this._content.id; }
-  get name(): string { return this._content.title; }
-  get styleClass(): object | null { return { [this._content.type]: true }; }
-  get content(): MyContent { return this._content; }
-  get subtrees(): this[] {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this._content.children.map(c => new (this.constructor as any)(c));
-  }
-  get isDraggable(): boolean { return true; }
+    get id(): string { return this._content.id; }
+    get name(): string { return this._content.title; }
+    get styleClass(): object | null { return { [this._content.type]: true }; }
+    get content(): MyContent { return this._content; }
+    get subtrees(): this[] {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return this._content.children.map(c => new (this.constructor as any)(c));
+    }
+    get isDraggable(): boolean { return true; }
   
-  update(newContent: MyContent) {
-    this._content = newContent;
-  }
+    update(newContent: MyContent) {
+        this._content = newContent;
+    }
 }
-
-const MyTree = genericTree<MyContent, MyTreenode>();
 
 // custom directive for autofocus
 const vFocus = {
-  mounted: (el: HTMLElement) => el.focus()
+    mounted: (el: HTMLElement) => el.focus()
 };
 
 const treeContent = {
@@ -87,47 +84,47 @@ const treeContent = {
 } as MyContent;
 
 const state = reactive<{
-  treeContent: MyTreenode;
+    treeContent: MyTreenode;
 }>({
-  treeContent: new MyTreenode(treeContent)
+    treeContent: new MyTreenode(treeContent)
 });
 
 const onArrange = (
-  node: MyTreenode
-  , from: {
-    id: string
-    , node: MyTreenode
-  }
-  , to: {
-    id: string
-    , node: MyTreenode
-  }
-  , index: number
+    node : MyTreenode
+    , from : {
+        id : string
+        , node : MyTreenode
+    }
+    , to : {
+        id : string
+        , node : MyTreenode
+    }
+    , index : number
 ) => {
-  const _from = findNodeById(from.id, state.treeContent);
-  const _to = findNodeById(to.id, state.treeContent);
-  if (_from === null || _to === null) return;
-  // 元親から削除
-  _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
-  // 新親に追加
-  _to.content.children.splice(index, 0, node.content);
-  _to.isFolding = false;
+    const _from = findNodeById(from.id, state.treeContent);
+    const _to = findNodeById(to.id, state.treeContent);
+    if (_from === null || _to === null) return;
+    // 元親から削除
+    _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
+    // 新親に追加
+    _to.content.children.splice(index, 0, node.content);
+    _to.isFolding = false;
 };
 
 const onToggleFolding = (id: string) => {
-  const node = findNodeById(id, state.treeContent);
-  if (node === null) return;
-  node.isFolding = !node.isFolding;
+    const node = findNodeById(id, state.treeContent);
+    if (node === null) return;
+    node.isFolding = !node.isFolding;
 };
 
 const onClickExport = (event: MouseEvent, node: MyTreenode) => {
-  console.log("export", node);
+    console.log("export", node);
 };
 
 const onUpdateName = (id: string, newName: string) => {
-  const node = findNodeById(id, state.treeContent);
-  if (node === null) return;
-  node.content.title = newName;
+    const node = findNodeById(id, state.treeContent);
+    if (node === null) return;
+    node.content.title = newName;
 };
 
 </script>
@@ -135,7 +132,7 @@ const onUpdateName = (id: string, newName: string) => {
 <template lang="pug">
 main
   h1 default
-  my-tree(
+  tree(
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"

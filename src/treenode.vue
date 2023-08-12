@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="U, T extends Treenode<U>">
 import { useSlots } from "vue";
 import type { Treenode } from "./treenode";
 
@@ -8,10 +8,10 @@ const vFocus = {
 };
 
 const props = defineProps<{
-  parent: Treenode<any> | undefined
-  , node: Treenode<any>
-  , depth: Number
-  , endEditingClosureBuilder: <U, T extends Treenode<U>>(node: T) => (newName: string) => void
+    parent : T | undefined;
+    node : T;
+    depth : Number;
+    endEditingClosureBuilder : (node: T) => (newName: string) => void;
 }>();
 
 const slots = useSlots();
@@ -20,21 +20,21 @@ const slots = useSlots();
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
 const emit = defineEmits<{
-  <U, T extends Treenode<U>>(e: "dragenter", event: DragEvent, node: T): void,
-  <U, T extends Treenode<U>>(e: "dragstart", event: DragEvent, parent: T, node: T): void,
-  <U, T extends Treenode<U>>(e: "dragend", event: DragEvent, node: T): void,
-  <U, T extends Treenode<U>>(e: "dragenter-temporarily-open", event: DragEvent, node: T): void,
-    <U, T extends Treenode<U>>(e: "mouse-leave", event: MouseEvent, node: T): void,
-  (e: "toggle-folding", event: MouseEvent, id: string): void
-  (e: "toggle-editing", event: MouseEvent, id: string, isEditing: boolean): void
-  (e: "hover", event: MouseEvent, id: string, isHovering: boolean): void
+    (e: "dragenter", event: DragEvent, node: T) : void;
+    (e: "dragstart", event: DragEvent, parent: T, node: T) : void;
+    (e: "dragend", event: DragEvent, node: T) : void;
+    (e: "dragenter-temporarily-open", event: DragEvent, node: T) : void;
+    (e: "mouse-leave", event: MouseEvent, node: T) : void;
+    (e: "toggle-folding", event: MouseEvent, id: string) : void;
+    (e: "toggle-editing", event: MouseEvent, id: string, isEditing: boolean) : void;
+    (e: "hover", event: MouseEvent, id: string, isHovering: boolean) : void;
 }>();
 
-const onDragenter = <U, T extends Treenode<U>>(e: DragEvent, _Treenode: T) => emit("dragenter", e, _Treenode);
-const onDragstart = <U, T extends Treenode<U>>(e: DragEvent, parent: T, _Treenode: T) => emit("dragstart", e, parent, _Treenode);
-const onDragend = <U, T extends Treenode<U>>(e: DragEvent, _Treenode: T) => emit("dragend", e, _Treenode);
-const onDragenterTemporarilyOpen = <U, T extends Treenode<U>>(e: DragEvent, _Treenode: T) => emit("dragenter-temporarily-open", e, _Treenode);
-const onMouseleave = <U, T extends Treenode<U>>(e: MouseEvent, _Treenode: T) => emit("mouse-leave", e, _Treenode);
+const onDragenter = (e: DragEvent, _treenode: T) => emit("dragenter", e, _treenode);
+const onDragstart = (e: DragEvent, parent: T, _treenode: T) => emit("dragstart", e, parent, _treenode);
+const onDragend = (e: DragEvent, _treenode: T) => emit("dragend", e, _treenode);
+const onDragenterTemporarilyOpen = (e: DragEvent, _treenode: T) => emit("dragenter-temporarily-open", e, _treenode);
+const onMouseleave = (e: MouseEvent, _treenode: T) => emit("mouse-leave", e, _treenode);
 const onToggleFolding = (e: MouseEvent, id: string) => emit("toggle-folding", e, id);
 const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing);
 const onHover = (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering);
