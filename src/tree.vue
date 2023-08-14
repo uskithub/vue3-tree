@@ -98,12 +98,6 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
     return [parent.children[len - 1] as HTMLElement, null];
 };
 
-const hoge1 = ref<T>(props.node);
-const hoge2 = ref<T>(props.node) as Ref<T>;
-
-const hoge3 = reactive<{ tree: T; }>({ tree: props.node });
-const hoge4 = reactive<{ tree: T; }>({ tree: props.node }) as { tree: Ref<T>; };
-
 const state = reactive<{
     tree : T;
     isModified : boolean;
@@ -125,12 +119,12 @@ const state = reactive<{
     } | null;
     reserve: T | null;
 }>({
-  tree: deepCopy(props.node)
-  , isModified: false
-  , dragging: null
-  , draggingOn: null
-  , temporarilyOpen: null
-  , reserve : null
+    tree: deepCopy(props.node)
+    , isModified: false
+    , dragging: null
+    , draggingOn: null
+    , temporarilyOpen: null
+    , reserve : null
 }) as { // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
     tree : T; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
     isModified : boolean;
@@ -153,9 +147,9 @@ const state = reactive<{
     reserve: T | null;
 };
 
-watch(props.node, (newVal: T) => {
-  state.isModified = false;
-  state.tree = deepCopy(newVal);
+watch(() => props.node, (newVal: T) => {
+    state.isModified = false;
+    state.tree = deepCopy(newVal);
 });
 
 /**

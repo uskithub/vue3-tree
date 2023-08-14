@@ -45,7 +45,46 @@ const vFocus = {
 
 const treeContent = {
   id: "0"
-  , title: "root"
+  , title: "root1"
+  , children: [
+    {
+      id: "1"
+      , title: "subtree1"
+      , children: [
+        {
+          id: "11"
+          , title: "subtree1-1"
+          , children: [] as MyContent[]
+        } as MyContent
+        , {
+          id: "12"
+          , title: "subtree1-2"
+          , children: [
+            {
+              id: "121"
+              , title: "subtree1-2-1"
+              , children: [] as MyContent[]
+            } as MyContent
+          ]
+        } as MyContent
+      ]
+    } as MyContent
+    , {
+      id: "2"
+      , title: "subtree2"
+      , children: [] as MyContent[]
+    } as MyContent
+    , {
+      id: "3"
+      , title: "subtree3"
+      , children: [] as MyContent[]
+    } as MyContent
+  ]
+} as MyContent;
+
+const treeContent2 = {
+  id: "0"
+  , title: "root2"
   , children: [
     {
       id: "1"
@@ -84,10 +123,13 @@ const treeContent = {
 
 const state = reactive<{
     treeContent: MyTreenode;
+    isContent1: boolean;
 }>({
     treeContent: new MyTreenode(treeContent)
+    , isContent1: true
 }) as {
     treeContent: MyTreenode;
+    isContent1: boolean;
 };
 
 const onArrange = (
@@ -128,10 +170,22 @@ const onUpdateName = (id: string, newName: string) => {
     node.content.title = newName;
 };
 
+const onClick = (event: MouseEvent) => {
+    if (state.isContent1) {
+        console.log("===== toggle content1 -> content2 =====");
+        state.treeContent = new MyTreenode(treeContent2);
+    } else {
+        console.log("===== toggle content2 -> content1 =====");
+        state.treeContent = new MyTreenode(treeContent);
+    }
+    state.isContent1 = !state.isContent1;
+};
+
 </script>
 
 <template lang="pug">
 main
+  button(@click="onClick") toggle contents
   h1 default
   tree(
     :node="state.treeContent"
