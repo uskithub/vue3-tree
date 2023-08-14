@@ -3,7 +3,6 @@
 import { findNodeById } from "../src/treenode";
 import type { Treenode } from "../src/treenode";
 import tree from "../src/tree.vue";
-import type { TreeProps } from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
 
@@ -87,7 +86,9 @@ const state = reactive<{
     treeContent: MyTreenode;
 }>({
     treeContent: new MyTreenode(treeContent)
-});
+}) as {
+    treeContent: MyTreenode;
+};
 
 const onArrange = (
     node : MyTreenode
@@ -101,8 +102,8 @@ const onArrange = (
     }
     , index : number
 ) => {
-    const _from = findNodeById(from.id, state.treeContent);
-    const _to = findNodeById(to.id, state.treeContent);
+    const _from = findNodeById<MyContent, MyTreenode>(from.id, state.treeContent);
+    const _to = findNodeById<MyContent, MyTreenode>(to.id, state.treeContent);
     if (_from === null || _to === null) return;
     // 元親から削除
     _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
@@ -112,7 +113,7 @@ const onArrange = (
 };
 
 const onToggleFolding = (id: string) => {
-    const node = findNodeById(id, state.treeContent);
+    const node = findNodeById<MyContent, MyTreenode>(id, state.treeContent);
     if (node === null) return;
     node.isFolding = !node.isFolding;
 };
@@ -122,7 +123,7 @@ const onClickExport = (event: MouseEvent, node: MyTreenode) => {
 };
 
 const onUpdateName = (id: string, newName: string) => {
-    const node = findNodeById(id, state.treeContent);
+    const node = findNodeById<MyContent, MyTreenode>(id, state.treeContent);
     if (node === null) return;
     node.content.title = newName;
 };
@@ -140,7 +141,7 @@ main
   )
   
   h1 using slot
-  my-tree(
+  tree(
     :node="state.treeContent"
     @arrange="onArrange"
     @toggle-folding="onToggleFolding"
