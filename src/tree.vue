@@ -338,14 +338,14 @@ const onDragend = (e: MouseEvent) => {
 }
 
 const onToggleFolding = (e: MouseEvent, id: string) => {
-    const _node = findNodeById(id, state.tree);
+    const _node = findNodeById<U, T>(id, state.tree);
     if (_node === null) return;
     _node.isFolding = !_node.isFolding;
     emit("toggle-folding", id);
 };
 
 const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
-    const _node = findNodeById(id, state.tree);
+    const _node = findNodeById<U, T>(id, state.tree);
     if (_node === null) return;
     const mutableNode = _node as Mutable<any>;
     mutableNode.isEditing = isEditing;
@@ -365,7 +365,7 @@ const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
 };
 
 const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
-    const _node = findNodeById(id, state.tree);
+    const _node = findNodeById<U, T>(id, state.tree);
     if (_node === null) return;
     const mutableNode = _node as Mutable<any>;
     mutableNode.isHovering = isHovering;
