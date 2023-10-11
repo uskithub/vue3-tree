@@ -1,21 +1,12 @@
 <script setup lang="ts" generic="U, T extends Treenode<U>">
 // view
+import type { TreeEvents } from "./tree";
 import treenode from "./treenode.vue";
-import type { Treenode, Mutable } from "./treenode";
+import type { Treenode, TreenodeEventHandlers, Mutable } from "./treenode";
 import { findNodeById } from "./treenode";
-import { nextTick, reactive, ref, useSlots, watch } from "vue";
-import type { PropType, Ref } from "vue";
+import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 import rdfc from "rfdc";
-
-// export type TreenodeProps<U, T extends Treenode<U>> = {
-//     node : T;
-//     parent? : T;
-//     depth : number;
-//     isHovering : boolean;
-//     isEditing : boolean;
-//     endEditing : (shouldCommit: boolean, newValue?: T) => void;
-// };
 
 // custom directive for autofocus
 const vFocus = {
@@ -31,13 +22,7 @@ const slots = useSlots();
 // @note: stateを一箇所に集めないと処理上の様々なな判断が困難なため、stateの保持および処理はRootコンポーネント（tree）で行い、
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
-const emit = defineEmits<{
-    (e: "dragenter", event: MouseEvent, node: T) : void;
-    (e: "arrange", node: T, from: { id: string; node: T; }, to: { id: string; node: T; }, index: number) : void;
-    (e: "toggle-folding", id: string): void;
-    (e: "toggle-editing", id: string, isEditing: boolean) : void;
-    (e: "update-node", node: T) : void;
-}>();
+const emit = defineEmits<TreeEvents<T>>();
 
 const _deepCopy = rdfc();
 const deepCopy = (node: T): T => {
@@ -153,104 +138,6 @@ watch(() => props.node, (newVal: T) => {
 });
 
 /**
- * dragされた要素をdrag状態にします（スタイルを変えます）。
- * @param e 
- * @param parent 
- * @param node 
- */
-const onDragstart = (e: MouseEvent, parent: T, node: T) => {
-    const elem = e.target as HTMLElement
-        , mirage = elem.cloneNode(true) as HTMLElement;
-    elem.classList.add("dragging");
-    mirage.classList.add("mirage");
-  
-    state.dragging = {
-        elem
-        , parent
-        , node
-        , mirage
-    };
-}
-
-/**
- * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
- * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
- * @param e 
- * @param node イベントを発火させたnode
- */
-const onDragenter = (e: DragEvent, node: T) => {
-    const elem = e.target as HTMLElement
-        , id = elem.dataset.id
-        , y = e.clientY;
-
-    // イベントを発火させたULへのdragenterのみ処理する
-    // イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれている
-    if (id !== node.id) return;
-
-    if (id === undefined || state.dragging === null) return;
-
-    // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
-    if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
-
-    if (state.draggingOn) {
-        state.draggingOn.elem.classList.remove("drop-target");
-        state.draggingOn.elem.removeEventListener("dragover", onDragover);
-        state.draggingOn = null;
-    }
-
-    elem.classList.add("drop-target");
-    elem.addEventListener("dragover", onDragover);
-
-    state.draggingOn = {
-        elem
-        , id
-        , node
-        , siblings: null
-    };
-
-    const mirage = state.dragging.mirage;
-    const siblings = getInsertingIntersiblings(elem, y);
-
-    // 既にmirageがある場合は何もしない
-    if (siblings.includes(mirage)) return;
-
-    if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-    if (siblings.includes(state.dragging.elem)) return;
-
-    elem.insertBefore(mirage, siblings[1]);
-    state.draggingOn.siblings = siblings;
-};
-
-const onDragenterTemporarilyOpen = (e: DragEvent, node: T) => {
-    console.log("onDragenterTemporarilyOpen", node);
-    if (!node.isFolding) return; // 既に展開されている場合は何もしない
-    if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
-    if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
-    if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return; // 既にsetTimeout設定済の
-    state.temporarilyOpen = { node, timerId: window.setTimeout(() => {
-        console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
-        if (state.temporarilyOpen) {
-            state.temporarilyOpen.node.isFolding = false;
-            state.temporarilyOpen = null;
-        }
-    }, 800) };
-};
-
-/**
- * dragleaveだと、子要素に入ったときも発火してキャンセルしてしまうのでmouseleaveを使っている。
- * @param e 
- * @param node 
- */
-const onMouseleave = (e: DragEvent, node: T) => {
-    if (state.temporarilyOpen) {
-        if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
-            clearTimeout(state.temporarilyOpen.timerId);
-            state.temporarilyOpen = null;
-        }
-    }
-};
-
-/**
  * dragしている要素がホバーしているsiblingsが変わった場合にmirageを移動させstateのsiblingsを更新します。
  * @param e 
  */
@@ -281,90 +168,6 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const onDragend = (e: MouseEvent) => {
-    const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
-    elem.classList.remove("dragging");
-
-    if (state.dragging === null || state.draggingOn === null) return;
-
-    const node = state.dragging.node;
-    const exPrarentNode = state.dragging.parent;
-    const mirage = state.dragging.mirage;
-    const exParent = elem.parentNode as HTMLElement;
-    const newParent = state.draggingOn.elem;
-
-    console.log(state.draggingOn)
-
-    if (exParent.dataset.id === undefined) return;
-
-    let index = 0;
-    for (let i = 0, len = newParent.children.length; i < len; i++) {
-        const child = newParent.children[i];
-        if (child === mirage) break;
-        if (child !== elem) index++;
-    }
-
-    // 元親から削除
-    exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
-    // 新親に追加
-    state.draggingOn.node.subtrees.splice(index, 0, node);
-    state.draggingOn.node.isFolding = false;
-
-    state.isModified = true;
-
-    // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
-    nextTick()
-        .then(() => {
-            if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-
-            newParent.classList.remove("drop-target");
-            newParent.removeEventListener("dragover", onDragover);
-        });
-
-    emit("arrange", node
-        , { id: exParent.dataset.id, node: exPrarentNode }
-        , { id: state.draggingOn.id, node: state.draggingOn.node }
-        , index
-    );
-
-    state.dragging = null;
-    state.draggingOn = null;
-}
-
-const onToggleFolding = (e: MouseEvent, id: string) => {
-    const _node = findNodeById<U, T>(id, state.tree);
-    if (_node === null) return;
-    _node.isFolding = !_node.isFolding;
-    emit("toggle-folding", id);
-};
-
-const onToggleEditing = (e: MouseEvent, id: string, isEditing: boolean) => {
-    const _node = findNodeById<U, T>(id, state.tree);
-    if (_node === null) return;
-    const mutableNode = _node as Mutable<any>;
-    mutableNode.isEditing = isEditing;
-    emit("toggle-editing", id, isEditing);
-    if (isEditing) {
-        state.reserve = deepCopy(_node);
-    } else { // ここは slot を使わないときしか来ないので、name での判断でOK
-        if (state.reserve === null) return;
-        if (state.reserve.name === _node.name) { // 更新なし
-              state.reserve = null;
-        } else { // 更新あり
-            state.reserve = null;
-            state.isModified = true;
-            emit("update-node", _node);
-        }
-    }
-};
-
-const onHover = (e: MouseEvent, id: string, isHovering: boolean) => {
-    const _node = findNodeById<U, T>(id, state.tree);
-    if (_node === null) return;
-    const mutableNode = _node as Mutable<any>;
-    mutableNode.isHovering = isHovering;
-};
-
 const endEditingClosureBuilder = (node: T): (shouldCommit: boolean, newValue?: T) => void => {
     return (shouldCommit: boolean, newValue?: T) => {
         const mutableNode = node as Mutable<T>;
@@ -382,20 +185,203 @@ const endEditingClosureBuilder = (node: T): (shouldCommit: boolean, newValue?: T
         }
     };
 };
+
+const handlers: TreenodeEventHandlers<T> = {
+    /**
+     * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
+     * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
+     * @param e 
+     * @param node イベントを発火させたnode
+     */
+    "dragenter" : (e: DragEvent, node: T) => {
+        const elem = e.target as HTMLElement
+            , id = elem.dataset.id
+            , y = e.clientY;
+
+        // イベントを発火させたULへのdragenterのみ処理する
+        // イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれている
+        if (id !== node.id) return;
+
+        if (id === undefined || state.dragging === null) return;
+
+        // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
+        if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
+
+        if (state.draggingOn) {
+            state.draggingOn.elem.classList.remove("drop-target");
+            state.draggingOn.elem.removeEventListener("dragover", onDragover);
+            state.draggingOn = null;
+        }
+
+        elem.classList.add("drop-target");
+        elem.addEventListener("dragover", onDragover);
+
+        state.draggingOn = {
+            elem
+            , id
+            , node
+            , siblings: null
+        };
+
+        const mirage = state.dragging.mirage;
+        const siblings = getInsertingIntersiblings(elem, y);
+
+        // 既にmirageがある場合は何もしない
+        if (siblings.includes(mirage)) return;
+
+        if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+        if (siblings.includes(state.dragging.elem)) return;
+
+        elem.insertBefore(mirage, siblings[1]);
+        state.draggingOn.siblings = siblings;
+    }
+    ,
+    /**
+     * dragされた要素をdrag状態にします（スタイルを変えます）。
+     * @param e 
+     * @param parent 
+     * @param node 
+     */
+    "dragstart" : (e: MouseEvent, parent: T, node: T) => {
+        const elem = e.target as HTMLElement
+            , mirage = elem.cloneNode(true) as HTMLElement;
+        elem.classList.add("dragging");
+        mirage.classList.add("mirage");
+    
+        state.dragging = {
+            elem
+            , parent
+            , node
+            , mirage
+        }
+    }
+    , "dragend" : (e: MouseEvent) => {
+        const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
+        elem.classList.remove("dragging");
+
+        if (state.dragging === null || state.draggingOn === null) return;
+
+        const node = state.dragging.node;
+        const exPrarentNode = state.dragging.parent;
+        const mirage = state.dragging.mirage;
+        const exParent = elem.parentNode as HTMLElement;
+        const newParent = state.draggingOn.elem;
+
+        console.log(state.draggingOn)
+
+        if (exParent.dataset.id === undefined) return;
+
+        let index = 0;
+        for (let i = 0, len = newParent.children.length; i < len; i++) {
+            const child = newParent.children[i];
+            if (child === mirage) break;
+            if (child !== elem) index++;
+        }
+
+        // 元親から削除
+        exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
+        // 新親に追加
+        state.draggingOn.node.subtrees.splice(index, 0, node);
+        state.draggingOn.node.isFolding = false;
+
+        state.isModified = true;
+
+        // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
+        nextTick()
+            .then(() => {
+                if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+
+                newParent.classList.remove("drop-target");
+                newParent.removeEventListener("dragover", onDragover);
+            });
+
+        emit("arrange", node
+            , { id: exParent.dataset.id, node: exPrarentNode }
+            , { id: state.draggingOn.id, node: state.draggingOn.node }
+            , index
+        );
+
+        state.dragging = null;
+        state.draggingOn = null;
+    }
+    , "dragenter-temporarily-open" : (e: DragEvent, node: T) => {
+        console.log("onDragenterTemporarilyOpen", node);
+        if (!node.isFolding) return; // 既に展開されている場合は何もしない
+        if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
+        if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
+        if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return; // 既にsetTimeout設定済の
+        state.temporarilyOpen = { 
+            node
+            , timerId: window.setTimeout(() => {
+                console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
+                if (state.temporarilyOpen) {
+                    state.temporarilyOpen.node.isFolding = false;
+                    state.temporarilyOpen = null;
+                }
+            }, 800) 
+        }
+    }
+    ,
+    /**
+     * dragleaveだと、子要素に入ったときも発火してキャンセルしてしまうのでmouseleaveを使っている。
+     * @param e 
+     * @param node 
+     */
+    "mouse-leave" : (e: MouseEvent, node: T) => {
+        if (state.temporarilyOpen) {
+            if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
+                clearTimeout(state.temporarilyOpen.timerId);
+                state.temporarilyOpen = null;
+            }
+        }
+    }
+    , "toggle-folding" : (e: MouseEvent, id: string) => {
+        const _node = findNodeById<U, T>(id, state.tree);
+        if (_node === null) return;
+        _node.isFolding = !_node.isFolding;
+        emit("toggle-folding", id);
+    }
+    , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => {
+        const _node = findNodeById<U, T>(id, state.tree);
+        if (_node === null) return;
+        const mutableNode = _node as Mutable<any>;
+        mutableNode.isEditing = isEditing;
+        emit("toggle-editing", id, isEditing);
+        if (isEditing) {
+            state.reserve = deepCopy(_node);
+        } else { // ここは slot を使わないときしか来ないので、name での判断でOK
+            if (state.reserve === null) return;
+            if (state.reserve.name === _node.name) { // 更新なし
+                state.reserve = null;
+            } else { // 更新あり
+                state.reserve = null;
+                state.isModified = true;
+                emit("update-node", _node);
+            }
+        }
+    }
+    , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => {
+        const _node = findNodeById<U, T>(id, state.tree);
+        if (_node === null) return;
+        const mutableNode = _node as Mutable<any>;
+        mutableNode.isHovering = isHovering;
+    }
+};
+
 </script>
 
 <template lang="pug">
 ul.tree
   li(:data-id="state.tree.id")
     .tree-header(
-      @dblclick.prevent="onToggleEditing($event, state.tree.id, true)"
-      @mouseover.prevent.stop="onHover($event, state.tree.id, true)"
-      @mouseout.prevent.stop="onHover($event, state.tree.id, false)"
+      @dblclick.prevent="handlers['toggle-editing']($event, state.tree.id, true)"
+      @mouseover.prevent.stop="handlers['hover']($event, state.tree.id, true)"
+      @mouseout.prevent.stop="handlers['hover']($event, state.tree.id, false)"
     )
       i.mdi(
         v-if="state.tree.subtrees.length > 0"
         :class="state.tree.isFolding ? 'mdi-menu-right' : 'mdi-menu-down'"
-        @click.prevent.stop="onToggleFolding($event, state.tree.id)"
+        @click.prevent.stop="handlers['toggle-folding']($event, state.tree.id)"
       )
       i.mdi.mdi-circle-small(v-else)
       slot(
@@ -410,13 +396,13 @@ ul.tree
         v-if="slots.default === undefined && state.tree.isEditing"
         v-model="state.tree.name"
         v-focus
-        @blur="onToggleEditing($event, state.tree.id, false)" 
+        @blur="handlers['toggle-editing']($event, state.tree.id, false)" 
       )
     ul.subtree(
       v-if="!state.tree.isFolding"
       :data-id="state.tree.id"
       :class="{ modified: state.isModified }"
-      @dragenter="onDragenter($event, state.tree)"
+      @dragenter="handlers['dragenter']($event, state.tree)"
     )
       li(
         v-for="childnode in state.tree.subtrees",
@@ -424,20 +410,20 @@ ul.tree
         :data-id="childnode.id", 
         :draggable="childnode.isDraggable"
         :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
-        @dragstart="onDragstart($event, state.tree, childnode)"
-        @dragend="onDragend($event)"
+        @dragstart="handlers['dragstart']($event, state.tree, childnode)"
+        @dragend="handlers['dragend']($event)"
       )
         .tree-item(
-          @dblclick.prevent="onToggleEditing($event, childnode.id, true)"
-          @mouseover.prevent.stop="onHover($event, childnode.id, true)"
-          @mouseout.prevent.stop="onHover($event, childnode.id, false)"
-          @dragenter="onDragenterTemporarilyOpen($event, childnode)"
-          @mouseleave.stop="onMouseleave($event, childnode)"
+          @dblclick.prevent="handlers['toggle-editing']($event, childnode.id, true)"
+          @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
+          @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
+          @dragenter="handlers['dragenter-temporarily-open']($event, childnode)"
+          @mouseleave.stop="handlers['mouse-leave']($event, childnode)"
         )
           i.mdi(
             v-if="childnode.subtrees.length > 0"
             :class="childnode.isFolding ? 'mdi-menu-right' : 'mdi-menu-down'"
-            @click.prevent.stop="onToggleFolding($event, childnode.id)"
+            @click.prevent.stop="handlers['toggle-folding']($event, childnode.id)"
           )
           i.mdi.mdi-circle-small(v-else)
           slot(
@@ -453,7 +439,7 @@ ul.tree
             v-if="slots.default === undefined && childnode.isEditing"
             v-model="childnode.name"
             v-focus
-            @blur="onToggleEditing($event, childnode.id, false)" 
+            @blur="handlers['toggle-editing']($event, childnode.id, false)" 
           )
         treenode(
           v-if="!childnode.isFolding || childnode.subtrees.length === 0"
@@ -461,14 +447,14 @@ ul.tree
           :node="childnode"
           :depth="2"
           :endEditingClosureBuilder="endEditingClosureBuilder"
-          @dragstart="onDragstart"
-          @dragend="onDragend"
-          @dragenter="onDragenter"
-          @dragenter-temporarily-open="onDragenterTemporarilyOpen"
-          @mouse-leave="onMouseleave"
-          @toggle-folding="onToggleFolding"
-          @toggle-editing="onToggleEditing"
-          @hover="onHover"
+          @dragenter="handlers['dragenter']"
+          @dragstart="handlers['dragstart']"
+          @dragend="handlers['dragend']"
+          @dragenter-temporarily-open="handlers['dragenter-temporarily-open']"
+          @mouse-leave="handlers['mouse-leave']"
+          @toggle-folding="handlers['toggle-folding']"
+          @toggle-editing="handlers['toggle-editing']"
+          @hover="handlers['hover']"
         )
           template(v-if="slots.default !== undefined" v-slot="slotProps")
             slot(
