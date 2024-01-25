@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="U, T extends Treenode<U>">
+<script setup lang="ts" generic="T extends Treenode<any>">
 import { useSlots } from "vue";
 import type { Treenode, TreenodeEvents, TreenodeEventHandlers } from "./treenode";
 

@@ -54,13 +54,13 @@ export type Mutable<Type> = {
     -readonly [Property in keyof Type]: Type[Property];
 };
 
-export function findNodeById<U, T extends Treenode<U>>(id: string, node: T): T | null {
+export function findNodeById<T extends Treenode<any>>(id: string, node: T): T | null {
     if (node.id === id) {
         return node;
     }
 
     for (const subtree of node.subtrees) {
-        const found = findNodeById<U, T>(id, subtree);
+        const found = findNodeById<T>(id, subtree);
         if (found) {
             return found;
         }

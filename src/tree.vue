@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="U, T extends Treenode<U>">
+<script setup lang="ts" generic="T extends Treenode<any>">
 // view
 import type { TreeEvents } from "./tree";
 import treenode from "./treenode.vue";
@@ -336,13 +336,13 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "toggle-folding" : (e: MouseEvent, id: string) => {
-        const _node = findNodeById<U, T>(id, state.tree);
+        const _node = findNodeById<T>(id, state.tree);
         if (_node === null) return;
         _node.isFolding = !_node.isFolding;
         emit("toggle-folding", id);
     }
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => {
-        const _node = findNodeById<U, T>(id, state.tree);
+        const _node = findNodeById<T>(id, state.tree);
         if (_node === null) return;
         const mutableNode = _node as Mutable<any>;
         mutableNode.isEditing = isEditing;
@@ -361,7 +361,7 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => {
-        const _node = findNodeById<U, T>(id, state.tree);
+        const _node = findNodeById<T>(id, state.tree);
         if (_node === null) return;
         const mutableNode = _node as Mutable<any>;
         mutableNode.isHovering = isHovering;
