@@ -14,16 +14,20 @@
 //         : never;
 // };
 
-export interface Treenode<T> {
+export interface NodeCore {
     readonly id: Readonly<string>;
     name: string;
     styleClass: object | null;
-    content: T;
     subtrees: this[];
     isDraggable: boolean;
     isFolding: boolean|undefined;
+}
+
+export interface Treenode<T> extends NodeCore {
+    content: T;
     readonly isEditing?: Readonly<boolean>;
     readonly isHovering?: Readonly<boolean>;
+
     update: (newContent: T) => void;
 };
 
@@ -38,12 +42,22 @@ export abstract class BaseTreenode<T> implements Treenode<T> {
     
     isFolding: boolean | undefined;
 
+    // this のバインドの問題だと思われるが、
     onToggleFolding(id: string) {
         const node = findNodeById<this>(id, this);
         if (node === null) return;
         node.isFolding = !node.isFolding;
         console.log(`onToggleFolding: ${node.name} ${node.isFolding}`, node);
-    };
+    }
+
+    toJSON() {
+        return {
+            id: this.id
+            , name: this.name
+            , isFolding: this.isFolding
+            , subtrees: this.subtrees
+        };
+    }
 }
 
 export type TreenodeEventHandlers<T> = {

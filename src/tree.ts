@@ -1,5 +1,12 @@
 // import type { DefineEvents } from "./treenode";
 
+import { BaseTreenode } from "./treenode";
+
+export type TreeProps<U, T extends BaseTreenode<U>> = {
+    node: T;
+    version: number;
+};
+
 export type TreeEventHandlers<T> = {
     "arrange" : (node: T, from: { id: string; node: T; }, to: { id: string; node: T; }, index: number) => void;
     "toggle-folding" : (id: string) => void;

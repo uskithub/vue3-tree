@@ -35,16 +35,6 @@ class MyTreenode extends BaseTreenode<MyContent> {
     update(newContent: MyContent) {
         this._content = newContent;
     }
-
-    toJSON = () => {
-      console.log("toJSON", this);
-        return {
-            id: this.id
-            , name: this.name
-            , isFolding: this.isFolding
-            , subtrees: this.subtrees
-        };
-    }
 }
 
 // custom directive for autofocus
@@ -132,12 +122,15 @@ const treeContent2 = {
 
 const state = reactive<{
     treeContent: MyTreenode;
+    version: number;
     isContent1: boolean;
 }>({
     treeContent: new MyTreenode(treeContent)
+    , version: 0
     , isContent1: true
 }) as {
     treeContent: MyTreenode;
+    version: number;
     isContent1: boolean;
 };
 
@@ -196,6 +189,7 @@ main
   h1 default
   tree(
     :node="state.treeContent"
+    :version="state.version"
     @arrange="onArrange"
     @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
     @update-name="onUpdateName"

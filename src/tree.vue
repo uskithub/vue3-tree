@@ -1,6 +1,6 @@
-<script setup lang="ts" generic="T extends BaseTreenode<any>">
+<script setup lang="ts" generic="U, T extends BaseTreenode<U>">
 // view
-import type { TreeEvents } from "./tree";
+import type { TreeEvents, TreeProps } from "./tree";
 import treenode from "./treenode.vue";
 import type { Treenode, TreenodeEventHandlers, Mutable } from "./treenode";
 import { BaseTreenode, findNodeById } from "./treenode";
@@ -8,13 +8,51 @@ import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 import rdfc from "rfdc";
 
+type Tmpnode = Treenode<U>;
+
+// class Tmpnode extends BaseTreenode<U> {
+//     private _content: MyContent;
+//     private _subtrees: this[];
+    
+//     constructor(content: U) {
+//         super();
+//         this._content = content;
+//         this._subtrees = content.children.map(c => new (this.constructor as any)(c));
+//         this.isFolding = false;
+//     }
+
+//     get id(): string { return this._content.id; }
+//     get name(): string { return this._content.title; }
+//     get styleClass(): object | null { return { [this._content.type]: true }; }
+//     get content(): MyContent { return this._content; }
+//     get subtrees(): this[] { return this._subtrees; }
+//     get isDraggable(): boolean { return true; }
+  
+//     update(newContent: MyContent) {
+//         this._content = newContent;
+//     }
+// }
+
 // custom directive for autofocus
 const vFocus = {
     mounted: (el: HTMLElement) => el.focus()
 };
 
+/**
+ * 何故かエラーなる
+ * 
+ * [plugin:vite:vue] [@vue/compiler-sfc] Unresolvable type reference or unsupported built-in utility type
+ * 
+ * /Users/yusuke/Workspace/vue3-tree/src/tree.vue
+ * 16 |  };
+ * 17 |  
+ * 18 |  const props = defineProps<TreeProps<U, T>>();
+ *    |                            ^^^^^^^^^^^^^^^
+ */
+// const props = defineProps<TreeProps<U, T>>();
 const props = defineProps<{
-    node : T
+    node: T;
+    version: number;
 }>();
 
 const slots = useSlots();
@@ -22,20 +60,19 @@ const slots = useSlots();
 // @note: stateを一箇所に集めないと処理上の様々なな判断が困難なため、stateの保持および処理はRootコンポーネント（tree）で行い、
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
-const emit = defineEmits<TreeEvents<T>>();
+const emit = defineEmits<TreeEvents<Tmpnode>>();
 
 const _deepCopy = rdfc();
-const deepCopy = (node: T): T => {
-    const _recursive = (node: T): T => {
+const deepCopyAsTmpnode = <V extends Treenode<U>>(node: V): Tmpnode => {
+    const _recursive = (node: Tmpnode): Tmpnode => {
         const tmp = {
             id: node.id
             , name: node.name
             , styleClass: node.styleClass
-            , content: node.content
             , subtrees: node.subtrees.map(n => _recursive(n))
             , isDraggable: node.isDraggable
             , isFolding: node.isFolding
-        } as T;
+        } as Tmpnode;
         return _deepCopy(tmp);
     };
     return _recursive(node);
@@ -84,58 +121,57 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
 };
 
 const state = reactive<{
-    tree : T;
+    tree : Tmpnode;
     isModified : boolean;
     dragging : {
         elem : HTMLElement;
-        parent : T;
-        node : T;
+        parent : Tmpnode;
+        node : Tmpnode;
         mirage : HTMLElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
         id : string;
-        node : T;
+        node : Tmpnode;
         siblings : [HTMLElement | null, HTMLElement | null] | null;
     } | null;
     temporarilyOpen : {
-        node : T;
+        node : Tmpnode;
         timerId : number;
     } | null;
-    reserve: T | null;
+    reserve: Tmpnode | null;
 }>({
-    tree: deepCopy(props.node)
+    tree: deepCopyAsTmpnode(props.node)
     , isModified: false
     , dragging: null
     , draggingOn: null
     , temporarilyOpen: null
     , reserve : null
 }) as { // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
-    tree : T; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
+    tree : Tmpnode; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
     isModified : boolean;
     dragging : {
         elem : HTMLElement;
-        parent : T;
-        node : T;
+        parent : Tmpnode;
+        node : Tmpnode;
         mirage : HTMLElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
         id : string;
-        node : T;
+        node : Tmpnode;
         siblings : [HTMLElement | null, HTMLElement | null] | null;
     } | null;
     temporarilyOpen : {
-        node : T;
+        node : Tmpnode;
         timerId : number;
     } | null;
-    reserve: T | null;
+    reserve: Tmpnode | null;
 };
 
-watch(props.node, (newVal: T) => {
-    console.log("上からのが来てる")
-    state.isModified = false;
-    state.tree = deepCopy(newVal);
+watch(() => props.version, (newVal: number) => {
+    console.log("version", newVal);
+    state.tree = deepCopyAsTmpnode(props.node);
 });
 
 /**
@@ -169,9 +205,9 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilder = (node: T): (shouldCommit: boolean, newValue?: T) => void => {
-    return (shouldCommit: boolean, newValue?: T) => {
-        const mutableNode = node as Mutable<T>;
+const endEditingClosureBuilder = (node: Tmpnode): (shouldCommit: boolean, newValue?: Tmpnode) => void => {
+    return (shouldCommit: boolean, newValue?: Tmpnode) => {
+        const mutableNode = node as Mutable<Tmpnode>;
         mutableNode.isEditing = false;
         if (shouldCommit && newValue) { // 更新あり
             state.reserve = null;
@@ -179,22 +215,22 @@ const endEditingClosureBuilder = (node: T): (shouldCommit: boolean, newValue?: T
             emit("update-node", newValue);
         } else { // 更新なし
             if (state.reserve === null) return;
-            (Object.keys(state.reserve) as (keyof T)[]).forEach(key => {  
-                mutableNode[key] = (state.reserve as T)[key];
+            (Object.keys(state.reserve) as (keyof Tmpnode)[]).forEach(key => {  
+                mutableNode[key] = (state.reserve as Tmpnode)[key];
             });
             state.reserve = null;
         }
     };
 };
 
-const handlers: TreenodeEventHandlers<T> = {
+const handlers: TreenodeEventHandlers<Tmpnode> = {
     /**
      * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
      * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
      * @param e 
      * @param node イベントを発火させたnode
      */
-    "dragenter" : (e: DragEvent, node: T) => {
+    "dragenter" : (e: DragEvent, node: Tmpnode) => {
         const elem = e.target as HTMLElement
             , id = elem.dataset.id
             , y = e.clientY;
@@ -243,7 +279,7 @@ const handlers: TreenodeEventHandlers<T> = {
      * @param parent 
      * @param node 
      */
-    "dragstart" : (e: MouseEvent, parent: T, node: T) => {
+    "dragstart" : (e: MouseEvent, parent: Tmpnode, node: Tmpnode) => {
         const elem = e.target as HTMLElement
             , mirage = elem.cloneNode(true) as HTMLElement;
         elem.classList.add("dragging");
@@ -305,7 +341,7 @@ const handlers: TreenodeEventHandlers<T> = {
         state.dragging = null;
         state.draggingOn = null;
     }
-    , "dragenter-temporarily-open" : (e: DragEvent, node: T) => {
+    , "dragenter-temporarily-open" : (e: DragEvent, node: Tmpnode) => {
         console.log("onDragenterTemporarilyOpen", node);
         if (!node.isFolding) return; // 既に展開されている場合は何もしない
         if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
@@ -328,7 +364,7 @@ const handlers: TreenodeEventHandlers<T> = {
      * @param e 
      * @param node 
      */
-    "mouse-leave" : (e: MouseEvent, node: T) => {
+    "mouse-leave" : (e: MouseEvent, node: Tmpnode) => {
         if (state.temporarilyOpen) {
             if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
                 clearTimeout(state.temporarilyOpen.timerId);
@@ -337,22 +373,22 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "toggle-folding" : (e: MouseEvent, id: string) => {
-        // const _node = findNodeById<T>(id, state.tree);
-        // if (_node === null) return;
-        // _node.isFolding = !_node.isFolding;
-        
+        const _node = findNodeById<Tmpnode>(id, state.tree);
+        if (_node === null) return;
+        _node.isFolding = !_node.isFolding;        
         // state.tree.onToggleFolding(id); // <--- これでOKにするにはdeepCopyをどうにかしないといけない
+    
         emit("toggle-folding", id);
         // props.node.onToggleFolding(id);
     }
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => {
-        const _node = findNodeById<T>(id, state.tree);
+        const _node = findNodeById<Tmpnode>(id, state.tree);
         if (_node === null) return;
-        const mutableNode = _node as Mutable<any>;
+        const mutableNode = _node as Mutable<Tmpnode>;
         mutableNode.isEditing = isEditing;
         emit("toggle-editing", id, isEditing);
         if (isEditing) {
-            state.reserve = deepCopy(_node);
+            state.reserve = deepCopyAsTmpnode(_node);
         } else { // ここは slot を使わないときしか来ないので、name での判断でOK
             if (state.reserve === null) return;
             if (state.reserve.name === _node.name) { // 更新なし
@@ -365,7 +401,7 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => {
-        const _node = findNodeById<T>(id, state.tree);
+        const _node = findNodeById<Tmpnode>(id, state.tree);
         if (_node === null) return;
         const mutableNode = _node as Mutable<any>;
         mutableNode.isHovering = isHovering;
