@@ -27,6 +27,36 @@ export interface Treenode<T> {
     update: (newContent: T) => void;
 };
 
+export abstract class BaseTreenode<T> implements Treenode<T> {
+    abstract id: string;
+    abstract name: string;
+    abstract styleClass: object | null;
+    abstract content: T;
+    abstract subtrees: this[];
+    abstract isDraggable: boolean;
+    abstract update(newContent: T): void;
+    
+    isFolding: boolean | undefined;
+
+    // constructor() {
+    //     this.onToggleFolding = this.onToggleFolding.bind(this);
+    // }
+
+    // onToggleFolding(id: string) {
+    //     const node = findNodeById<this>(id, this);
+    //     if (node === null) return;
+    //     node.isFolding = !node.isFolding;
+    //     console.log(`onToggleFolding: ${node.name} ${node.isFolding}`, node);
+    // };
+
+    onToggleFolding: (id: string) => void = (id: string) => {
+        const node = findNodeById<this>(id, this);
+        if (node === null) return;
+        node.isFolding = !node.isFolding;
+        console.log(`onToggleFolding: ${node.name} ${node.isFolding}`, node);
+    };
+}
+
 export type TreenodeEventHandlers<T> = {
     "dragenter" : (event: DragEvent, node: T) => void;
     "dragstart" : (event: DragEvent, parent: T, node: T) => void;

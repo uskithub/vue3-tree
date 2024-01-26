@@ -1,9 +1,9 @@
-<script setup lang="ts" generic="T extends Treenode<any>">
+<script setup lang="ts" generic="T extends BaseTreenode<any>">
 // view
 import type { TreeEvents } from "./tree";
 import treenode from "./treenode.vue";
 import type { Treenode, TreenodeEventHandlers, Mutable } from "./treenode";
-import { findNodeById } from "./treenode";
+import { BaseTreenode, findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 import rdfc from "rfdc";
@@ -132,7 +132,8 @@ const state = reactive<{
     reserve: T | null;
 };
 
-watch(() => props.node, (newVal: T) => {
+watch(props.node, (newVal: T) => {
+    console.log("上からのが来てる")
     state.isModified = false;
     state.tree = deepCopy(newVal);
 });
@@ -336,10 +337,13 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "toggle-folding" : (e: MouseEvent, id: string) => {
-        const _node = findNodeById<T>(id, state.tree);
-        if (_node === null) return;
-        _node.isFolding = !_node.isFolding;
+         // const _node = findNodeById<T>(id, state.tree);
+        // if (_node === null) return;
+        // _node.isFolding = !_node.isFolding;
+        
+        // state.tree.onToggleFolding(id); // <--- これでOKにするにはdeepCopyをどうにかしないといけない
         emit("toggle-folding", id);
+        // props.node.onToggleFolding(id);
     }
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => {
         const _node = findNodeById<T>(id, state.tree);

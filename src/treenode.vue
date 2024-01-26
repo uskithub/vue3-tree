@@ -1,6 +1,7 @@
-<script setup lang="ts" generic="T extends Treenode<any>">
+<script setup lang="ts" generic="T extends BaseTreenode<any>">
 import { useSlots } from "vue";
 import type { Treenode, TreenodeEvents, TreenodeEventHandlers } from "./treenode";
+import type { BaseTreenode } from "./treenode";
 
 // custom directive for autofocus
 const vFocus = {

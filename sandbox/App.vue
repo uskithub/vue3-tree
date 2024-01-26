@@ -1,10 +1,11 @@
 <script setup lang="ts">
 
 import { findNodeById } from "../src/treenode";
-import type { Treenode } from "../src/treenode";
+import { BaseTreenode } from "../src/treenode";
 import tree from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
+import { watch } from "vue";
 
 type MyContent = {
     id : string;
@@ -13,12 +14,14 @@ type MyContent = {
     children : MyContent[];
 };
 
-class MyTreenode implements Treenode<MyContent> {
+class MyTreenode extends BaseTreenode<MyContent> {
     private _content: MyContent;
-    isFolding: boolean;
-
+    private _subtrees: this[];
+    
     constructor(content: MyContent) {
+        super();
         this._content = content;
+        this._subtrees = content.children.map(c => new (this.constructor as any)(c));
         this.isFolding = false;
     }
 
@@ -26,14 +29,21 @@ class MyTreenode implements Treenode<MyContent> {
     get name(): string { return this._content.title; }
     get styleClass(): object | null { return { [this._content.type]: true }; }
     get content(): MyContent { return this._content; }
-    get subtrees(): this[] {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this._content.children.map(c => new (this.constructor as any)(c));
-    }
+    get subtrees(): this[] { return this._subtrees; }
     get isDraggable(): boolean { return true; }
   
     update(newContent: MyContent) {
         this._content = newContent;
+    }
+
+    toJSON = () => {
+      console.log("toJSON", this);
+        return {
+            id: this.id
+            , name: this.name
+            , isFolding: this.isFolding
+            , subtrees: this.subtrees
+        };
     }
 }
 
@@ -131,6 +141,10 @@ const state = reactive<{
     isContent1: boolean;
 };
 
+watch(state.treeContent, (newVal, oldVal) => {
+  console.log("watch", newVal.isFolding, oldVal.isFolding);
+});
+
 const onArrange = (
     node : MyTreenode
     , from : {
@@ -192,28 +206,29 @@ main
     @toggle-folding="onToggleFolding"
     @update-name="onUpdateName"
   )
+  textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
-  h1 using slot
-  tree(
-    :node="state.treeContent"
-    @arrange="onArrange"
-    @toggle-folding="onToggleFolding"
-    @update-name="onUpdateName"
-  )
-    template(v-slot="slotProps")
-      input(
-        v-if="slotProps.isEditing"
-        v-model="slotProps.node.name"
-        v-focus
-        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(slotProps.node.name); }"
-      )
-      template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
-        span.header {{ slotProps.depth }} : {{ slotProps.node.name }}
-        i.mdi.mdi-export-variant(
-          v-show="slotProps.isHovering"
-          @click.prevent="onClickExport($event, slotProps.node)"
-        )
-      span.title(v-else) {{ slotProps.depth }} : {{ slotProps.node.name }}
+  //- h1 using slot
+  //- tree(
+  //-   :node="state.treeContent"
+  //-   @arrange="onArrange"
+  //-   @toggle-folding="onToggleFolding"
+  //-   @update-name="onUpdateName"
+  //- )
+  //-   template(v-slot="slotProps")
+  //-     input(
+  //-       v-if="slotProps.isEditing"
+  //-       v-model="slotProps.node.name"
+  //-       v-focus
+  //-       @blur="() => { if (slotProps.endEditing) slotProps.endEditing(slotProps.node.name); }"
+  //-     )
+  //-     template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
+  //-       span.header {{ slotProps.depth }} : {{ slotProps.node.name }}
+  //-       i.mdi.mdi-export-variant(
+  //-         v-show="slotProps.isHovering"
+  //-         @click.prevent="onClickExport($event, slotProps.node)"
+  //-       )
+  //-     span.title(v-else) {{ slotProps.depth }} : {{ slotProps.node.name }}
 </template>
 
 <style lang="scss" scoped></style>
