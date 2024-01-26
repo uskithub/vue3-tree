@@ -167,12 +167,6 @@ const onArrange = (
     _to.isFolding = false;
 };
 
-const onToggleFolding = (id: string) => {
-    const node = findNodeById<MyTreenode>(id, state.treeContent);
-    if (node === null) return;
-    node.isFolding = !node.isFolding;
-};
-
 const onClickExport = (event: MouseEvent, node: MyTreenode) => {
     console.log("export", node);
 };
@@ -203,7 +197,7 @@ main
   tree(
     :node="state.treeContent"
     @arrange="onArrange"
-    @toggle-folding="onToggleFolding"
+    @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
     @update-name="onUpdateName"
   )
   textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)

@@ -337,7 +337,7 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "toggle-folding" : (e: MouseEvent, id: string) => {
-         // const _node = findNodeById<T>(id, state.tree);
+        // const _node = findNodeById<T>(id, state.tree);
         // if (_node === null) return;
         // _node.isFolding = !_node.isFolding;
         

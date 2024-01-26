@@ -38,18 +38,7 @@ export abstract class BaseTreenode<T> implements Treenode<T> {
     
     isFolding: boolean | undefined;
 
-    // constructor() {
-    //     this.onToggleFolding = this.onToggleFolding.bind(this);
-    // }
-
-    // onToggleFolding(id: string) {
-    //     const node = findNodeById<this>(id, this);
-    //     if (node === null) return;
-    //     node.isFolding = !node.isFolding;
-    //     console.log(`onToggleFolding: ${node.name} ${node.isFolding}`, node);
-    // };
-
-    onToggleFolding: (id: string) => void = (id: string) => {
+    onToggleFolding(id: string) {
         const node = findNodeById<this>(id, this);
         if (node === null) return;
         node.isFolding = !node.isFolding;
