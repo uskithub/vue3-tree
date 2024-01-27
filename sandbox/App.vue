@@ -186,7 +186,17 @@ const onClick = (event: MouseEvent) => {
 <template lang="pug">
 main
   button(@click="onClick") toggle contents
-  h1 default
+  //- h1 default
+  //- tree(
+  //-   :node="state.treeContent"
+  //-   :version="state.version"
+  //-   @arrange="onArrange"
+  //-   @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
+  //-   @update-name="onUpdateName"
+  //- )
+  //- textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
+  
+  h1 using slot
   tree(
     :node="state.treeContent"
     :version="state.version"
@@ -194,29 +204,20 @@ main
     @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
     @update-name="onUpdateName"
   )
-  textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
-  
-  //- h1 using slot
-  //- tree(
-  //-   :node="state.treeContent"
-  //-   @arrange="onArrange"
-  //-   @toggle-folding="onToggleFolding"
-  //-   @update-name="onUpdateName"
-  //- )
-  //-   template(v-slot="slotProps")
-  //-     input(
-  //-       v-if="slotProps.isEditing"
-  //-       v-model="slotProps.node.name"
-  //-       v-focus
-  //-       @blur="() => { if (slotProps.endEditing) slotProps.endEditing(slotProps.node.name); }"
-  //-     )
-  //-     template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
-  //-       span.header {{ slotProps.depth }} : {{ slotProps.node.name }}
-  //-       i.mdi.mdi-export-variant(
-  //-         v-show="slotProps.isHovering"
-  //-         @click.prevent="onClickExport($event, slotProps.node)"
-  //-       )
-  //-     span.title(v-else) {{ slotProps.depth }} : {{ slotProps.node.name }}
+    template(v-slot="slotProps")
+      input(
+        v-if="slotProps.isEditing"
+        v-model="slotProps.node.name"
+        v-focus
+        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(slotProps.node.name); }"
+      )
+      template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
+        span.header {{ slotProps.depth }} : {{ slotProps.node.name }}
+        i.mdi.mdi-export-variant(
+          v-show="slotProps.isHovering"
+          @click.prevent="onClickExport($event, slotProps.node)"
+        )
+      span.title(v-else) {{ slotProps.depth }} : {{ slotProps.node.name }}
 </template>
 
 <style lang="scss" scoped></style>

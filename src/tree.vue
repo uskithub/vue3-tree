@@ -133,7 +133,7 @@ const state = reactive<{
         node : InnerTreenode<T>;
         timerId : number;
     } | null;
-    reserve: InnerTreenode<T> | null;
+    reserve: InnerTreenode<InnerTreenode<T>> | null;
 }>({
     tree: new InnerTreenode(props.node)
     , isModified: false
@@ -160,7 +160,7 @@ const state = reactive<{
         node : InnerTreenode<T>;
         timerId : number;
     } | null;
-    reserve: InnerTreenode<T> | null;
+    reserve: InnerTreenode<InnerTreenode<T>> | null;
 };
 
 watch(() => props.version, (newVal: number) => {
@@ -199,7 +199,8 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
+const endEditingClosureBuilderilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
+    console.log("EEEE endEditingClosureBuilder", node);
     return (shouldCommit: boolean, newValue?: InnerTreenode<T>) => {
         node.isEditing = false;
         if (shouldCommit && newValue) { // 更新あり
@@ -208,9 +209,10 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolea
             emit("update-node", newValue);
         } else { // 更新なし
             if (state.reserve === null) return;
-            (Object.keys(state.reserve) as (keyof InnerTreenode<T>)[]).forEach(key => {  
-                node[key] = (state.reserve as InnerTreenode<T>)[key];
-            });
+            (Object.keys(state.reserve) as (keyof InnerTreenode<InnerTreenode<T>>)[])
+                .forEach(key => {
+                    node[key] = (state.reserve as InnerTreenode<InnerTreenode<T>>)[key];
+                 });
             state.reserve = null;
         }
     };
@@ -218,6 +220,9 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolea
 
 const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
+     * dragstgartで作成したmirageを、dragenterしたULの子要素として挿入します。
+     * 兄弟要素間での挿入位置はマウスポインタの位置によって決定します。
+     * 
      * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
      * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
      * @param e 
@@ -229,7 +234,8 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             , y = e.clientY;
 
         // イベントを発火させたULへのdragenterのみ処理する
-        // イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれている
+        // （イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれているため
+        // 本丸以外は処理を終了させる）
         if (id !== node.id) return;
 
         if (id === undefined || state.dragging === null) return;
@@ -246,12 +252,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         elem.classList.add("drop-target");
         elem.addEventListener("dragover", onDragover);
 
-        state.draggingOn = {
-            elem
-            , id
-            , node
-            , siblings: null
-        };
+        state.draggingOn = { elem, id, node, siblings: null };
 
         const mirage = state.dragging.mirage;
         const siblings = getInsertingIntersiblings(elem, y);
@@ -259,15 +260,17 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         // 既にmirageがある場合は何もしない
         if (siblings.includes(mirage)) return;
 
+        // mirageがinsert済みな場合には親がある場合は引き剥がし
         if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
         if (siblings.includes(state.dragging.elem)) return;
 
+        // mirageを挿入
         elem.insertBefore(mirage, siblings[1]);
         state.draggingOn.siblings = siblings;
     }
     ,
     /**
-     * dragされた要素をdrag状態にします（スタイルを変えます）。
+     * dragされた要素をdrag状態にし（スタイルを変え）、クローンを作成してstateに保存します。
      * @param e 
      * @param parent 
      * @param node 
@@ -277,15 +280,14 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             , mirage = elem.cloneNode(true) as HTMLElement;
         elem.classList.add("dragging");
         mirage.classList.add("mirage");
-    
-        state.dragging = {
-            elem
-            , parent
-            , node
-            , mirage
-        }
+        state.dragging = { elem, parent, node, mirage };
     }
-    , "dragend" : (e: MouseEvent) => {
+    , 
+    /**
+     * dragしていた要素を元の親から削除、新たな親の子として追加します。
+     * @param e 
+     */
+    "dragend" : (e: MouseEvent) => {
         const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
         elem.classList.remove("dragging");
 
@@ -297,7 +299,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         const exParent = elem.parentNode as HTMLElement;
         const newParent = state.draggingOn.elem;
 
-        console.log(state.draggingOn)
+        // console.log(state.draggingOn)
 
         if (exParent.dataset.id === undefined) return;
 
@@ -310,10 +312,9 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 
         // 元親から削除
         exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
-        // 新親に追加
+        // 新たな親に追加
         state.draggingOn.node.subtrees.splice(index, 0, node);
         state.draggingOn.node.isFolding = false;
-
         state.isModified = true;
 
         // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
@@ -335,7 +336,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         state.draggingOn = null;
     }
     , "dragenter-temporarily-open" : (e: DragEvent, node: InnerTreenode<T>) => {
-        console.log("onDragenterTemporarilyOpen", node);
+        // console.log("onDragenterTemporarilyOpen", node);
         if (!node.isFolding) return; // 既に展開されている場合は何もしない
         if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
         if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
