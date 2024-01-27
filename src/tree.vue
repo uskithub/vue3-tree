@@ -200,7 +200,9 @@ const onDragover = (e: MouseEvent) => {
 };
 
 const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
+    console.log("endEditingClosureBuilder", node);
     return (shouldCommit: boolean, newValue?: InnerTreenode<T>) => {
+        console.log("shouldCommit", shouldCommit, node, newValue);
         node.isEditing = false;
         if (shouldCommit && newValue) { // 更新あり
             state.reserve = null;
@@ -414,7 +416,7 @@ ul.tree
         :depth="0", 
         :isHovering="state.tree.isHovering===true", 
         :isEditing="state.tree.isEditing===true",
-        :endEditing="() => endEditingClosureBuilder(state.tree)"
+        :endEditing="endEditingClosureBuilder(state.tree)"
       )
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(
@@ -457,7 +459,7 @@ ul.tree
             :depth="1", 
             :isHovering="childnode.isHovering===true", 
             :isEditing="childnode.isEditing===true",
-            :endEditing="() => endEditingClosureBuilder(childnode)"
+            :endEditing="endEditingClosureBuilder(childnode)"
           )
           span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
           input(

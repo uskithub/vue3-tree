@@ -66,7 +66,7 @@ ul.subtree(
         :depth="props.depth",
         :isHovering="childnode.isHovering===true",
         :isEditing="childnode.isEditing===true",
-        :endEditing="() => props.endEditingClosureBuilder(childnode)"
+        :endEditing="props.endEditingClosureBuilder(childnode)"
       )
       span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
       input(
