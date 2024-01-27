@@ -199,7 +199,7 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilderilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
+const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
     console.log("EEEE endEditingClosureBuilder", node);
     return (shouldCommit: boolean, newValue?: InnerTreenode<T>) => {
         node.isEditing = false;
