@@ -26,8 +26,8 @@ export interface TreenodeCore<T> {
 }
 
 interface NodeEditable {
-    readonly isEditing?: Readonly<boolean>;
-    readonly isHovering?: Readonly<boolean>;
+    isEditing?: boolean;
+    isHovering?: boolean;
 }
 
 interface NodeUpdatable<T> {
@@ -44,7 +44,6 @@ export abstract class BaseTreenode<T> implements TreenodeCore<T> {
     
     isFolding: boolean | undefined;
 
-    // this のバインドの問題だと思われるが、
     onToggleFolding(id: string) {
         const node = findNodeById<this>(id, this);
         if (node === null) return;

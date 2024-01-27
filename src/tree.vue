@@ -2,14 +2,12 @@
 // view
 import type { TreeEvents, TreeProps } from "./tree";
 import treenode from "./treenode.vue";
-import type { BaseUpdatableTreenode, TreenodeEventHandlers, Mutable } from "./treenode";
+import type { BaseTreenode, BaseUpdatableTreenode, TreenodeEventHandlers, Mutable } from "./treenode";
 import { BaseEditableTreenode, findNodeById } from "./treenode";
 import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 
-// type InnerTreenode = Treenode<U>;
-
-class InnerTreenode extends BaseEditableTreenode<U> {
+class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
     readonly id: Readonly<string>;
     readonly content: Readonly<U>;
     name: string;
@@ -17,10 +15,10 @@ class InnerTreenode extends BaseEditableTreenode<U> {
     subtrees: this[];
     isDraggable: boolean;
     isFolding: boolean|undefined;
-    readonly isEditing?: Readonly<boolean>;
-    readonly isHovering?: Readonly<boolean>;
+    isEditing?: boolean;
+    isHovering?: boolean;
 
-    constructor(node: T) {
+    constructor(node: X) {
         super();
         this.content = node.content;
         this.id = node.id;
@@ -30,8 +28,20 @@ class InnerTreenode extends BaseEditableTreenode<U> {
         this.isDraggable = node.isDraggable;
         this.isFolding = false;
     }
-}
 
+    onToggleEditing(id: string, isEditing: boolean): this | null {
+        const _node = findNodeById<this>(id, this);
+        if (_node === null) return null;
+        _node.isEditing = isEditing;
+        return _node;
+    }
+
+    onToggleHovering(id: string, isHovering: boolean) {
+        const _node = findNodeById<this>(id, this);
+        if (_node === null) return;
+        _node.isHovering = isHovering;
+    }
+}
 
 // custom directive for autofocus
 const vFocus = {
@@ -60,7 +70,7 @@ const slots = useSlots();
 // @note: stateを一箇所に集めないと処理上の様々なな判断が困難なため、stateの保持および処理はRootコンポーネント（tree）で行い、
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
-const emit = defineEmits<TreeEvents<InnerTreenode>>();
+const emit = defineEmits<TreeEvents<InnerTreenode<T>>>();
 
 /**
  * targetUl が ofElem 自身かその子孫の場合 true を返します。
@@ -105,25 +115,25 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
 };
 
 const state = reactive<{
-    tree : InnerTreenode;
+    tree : InnerTreenode<T>;
     isModified : boolean;
     dragging : {
         elem : HTMLElement;
-        parent : InnerTreenode;
-        node : InnerTreenode;
+        parent : InnerTreenode<T>;
+        node : InnerTreenode<T>;
         mirage : HTMLElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
         id : string;
-        node : InnerTreenode;
+        node : InnerTreenode<T>;
         siblings : [HTMLElement | null, HTMLElement | null] | null;
     } | null;
     temporarilyOpen : {
-        node : InnerTreenode;
+        node : InnerTreenode<T>;
         timerId : number;
     } | null;
-    reserve: InnerTreenode | null;
+    reserve: InnerTreenode<T> | null;
 }>({
     tree: new InnerTreenode(props.node)
     , isModified: false
@@ -132,25 +142,25 @@ const state = reactive<{
     , temporarilyOpen: null
     , reserve : null
 }) as { // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
-    tree : InnerTreenode; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
+    tree : InnerTreenode<T>; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
     isModified : boolean;
     dragging : {
         elem : HTMLElement;
-        parent : InnerTreenode;
-        node : InnerTreenode;
+        parent : InnerTreenode<T>;
+        node : InnerTreenode<T>;
         mirage : HTMLElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
         id : string;
-        node : InnerTreenode;
+        node : InnerTreenode<T>;
         siblings : [HTMLElement | null, HTMLElement | null] | null;
     } | null;
     temporarilyOpen : {
-        node : InnerTreenode;
+        node : InnerTreenode<T>;
         timerId : number;
     } | null;
-    reserve: InnerTreenode | null;
+    reserve: InnerTreenode<T> | null;
 };
 
 watch(() => props.version, (newVal: number) => {
@@ -189,32 +199,31 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilder = (node: InnerTreenode): (shouldCommit: boolean, newValue?: InnerTreenode) => void => {
-    return (shouldCommit: boolean, newValue?: InnerTreenode) => {
-        const mutableNode = node as Mutable<InnerTreenode>;
-        mutableNode.isEditing = false;
+const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
+    return (shouldCommit: boolean, newValue?: InnerTreenode<T>) => {
+        node.isEditing = false;
         if (shouldCommit && newValue) { // 更新あり
             state.reserve = null;
             state.isModified = true;
             emit("update-node", newValue);
         } else { // 更新なし
             if (state.reserve === null) return;
-            (Object.keys(state.reserve) as (keyof InnerTreenode)[]).forEach(key => {  
-                mutableNode[key] = (state.reserve as InnerTreenode)[key];
+            (Object.keys(state.reserve) as (keyof InnerTreenode<T>)[]).forEach(key => {  
+                node[key] = (state.reserve as InnerTreenode<T>)[key];
             });
             state.reserve = null;
         }
     };
 };
 
-const handlers: TreenodeEventHandlers<InnerTreenode> = {
+const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
      * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
      * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
      * @param e 
      * @param node イベントを発火させたnode
      */
-    "dragenter" : (e: DragEvent, node: InnerTreenode) => {
+    "dragenter" : (e: DragEvent, node: InnerTreenode<T>) => {
         const elem = e.target as HTMLElement
             , id = elem.dataset.id
             , y = e.clientY;
@@ -263,7 +272,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode> = {
      * @param parent 
      * @param node 
      */
-    "dragstart" : (e: MouseEvent, parent: InnerTreenode, node: InnerTreenode) => {
+    "dragstart" : (e: MouseEvent, parent: InnerTreenode<T>, node: InnerTreenode<T>) => {
         const elem = e.target as HTMLElement
             , mirage = elem.cloneNode(true) as HTMLElement;
         elem.classList.add("dragging");
@@ -325,7 +334,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode> = {
         state.dragging = null;
         state.draggingOn = null;
     }
-    , "dragenter-temporarily-open" : (e: DragEvent, node: InnerTreenode) => {
+    , "dragenter-temporarily-open" : (e: DragEvent, node: InnerTreenode<T>) => {
         console.log("onDragenterTemporarilyOpen", node);
         if (!node.isFolding) return; // 既に展開されている場合は何もしない
         if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
@@ -348,7 +357,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode> = {
      * @param e 
      * @param node 
      */
-    "mouse-leave" : (e: MouseEvent, node: InnerTreenode) => {
+    "mouse-leave" : (e: MouseEvent, node: InnerTreenode<T>) => {
         if (state.temporarilyOpen) {
             if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
                 clearTimeout(state.temporarilyOpen.timerId);
@@ -361,14 +370,13 @@ const handlers: TreenodeEventHandlers<InnerTreenode> = {
         emit("toggle-folding", id);
     }
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => {
-        const _node = findNodeById<InnerTreenode>(id, state.tree);
-        if (_node === null) return;
-        const mutableNode = _node as Mutable<InnerTreenode>;
-        mutableNode.isEditing = isEditing;
+        const _node = state.tree.onToggleEditing(id, isEditing);
+        if (_node === null) return null;
+
         emit("toggle-editing", id, isEditing);
+        
         if (isEditing) {
-            // state.reserve = new InnerTreenode(_node);
-            state.reserve = _node;
+            state.reserve = new InnerTreenode<InnerTreenode<T>>(_node);
         } else { // ここは slot を使わないときしか来ないので、name での判断でOK
             if (state.reserve === null) return;
             if (state.reserve.name === _node.name) { // 更新なし
@@ -381,10 +389,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode> = {
         }
     }
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => {
-        const _node = findNodeById<InnerTreenode>(id, state.tree);
-        if (_node === null) return;
-        const mutableNode = _node as Mutable<any>;
-        mutableNode.isHovering = isHovering;
+        state.tree.onToggleHovering(id, isHovering);
     }
 };
 
