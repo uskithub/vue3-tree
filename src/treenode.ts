@@ -14,8 +14,10 @@
 //         : never;
 // };
 
-export interface NodeCore {
+// Tree/Treeview で使う
+export interface TreenodeCore<T> {
     readonly id: Readonly<string>;
+    readonly content: Readonly<T>;
     name: string;
     styleClass: object | null;
     subtrees: this[];
@@ -23,22 +25,22 @@ export interface NodeCore {
     isFolding: boolean|undefined;
 }
 
-export interface Treenode<T> extends NodeCore {
-    content: T;
+interface NodeEditable {
     readonly isEditing?: Readonly<boolean>;
     readonly isHovering?: Readonly<boolean>;
+}
 
+interface NodeUpdatable<T> {
     update: (newContent: T) => void;
-};
+}
 
-export abstract class BaseTreenode<T> implements Treenode<T> {
+export abstract class BaseTreenode<T> implements TreenodeCore<T> {
     abstract id: string;
+    abstract content: T;
     abstract name: string;
     abstract styleClass: object | null;
-    abstract content: T;
     abstract subtrees: this[];
     abstract isDraggable: boolean;
-    abstract update(newContent: T): void;
     
     isFolding: boolean | undefined;
 
@@ -58,6 +60,17 @@ export abstract class BaseTreenode<T> implements Treenode<T> {
             , subtrees: this.subtrees
         };
     }
+}
+
+// App.vue で使う
+export abstract class BaseUpdatableTreenode<T> extends BaseTreenode<T> implements NodeUpdatable<T> {
+    abstract update(newContent: T): void;
+}
+
+// Tree/Treeview で使う
+export abstract class BaseEditableTreenode<T> extends BaseTreenode<T> implements NodeEditable {
+    abstract isEditing?: boolean;
+    abstract isHovering?: boolean;
 }
 
 export type TreenodeEventHandlers<T> = {
@@ -87,7 +100,7 @@ export type Mutable<Type> = {
     -readonly [Property in keyof Type]: Type[Property];
 };
 
-export function findNodeById<T extends Treenode<any>>(id: string, node: T): T | null {
+export function findNodeById<T extends TreenodeCore<any>>(id: string, node: T): T | null {
     if (node.id === id) {
         return node;
     }

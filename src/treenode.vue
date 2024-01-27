@@ -1,7 +1,6 @@
-<script setup lang="ts" generic="T extends BaseTreenode<any>">
+<script setup lang="ts" generic="T extends BaseEditableTreenode<any>">
 import { useSlots } from "vue";
-import type { Treenode, TreenodeEvents, TreenodeEventHandlers } from "./treenode";
-import type { BaseTreenode } from "./treenode";
+import type { BaseEditableTreenode, TreenodeEvents, TreenodeEventHandlers } from "./treenode";
 
 // custom directive for autofocus
 const vFocus = {
@@ -32,7 +31,6 @@ const handlers: TreenodeEventHandlers<T> = {
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing)
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering)
 }
-
 </script>
 
 <template lang="pug">

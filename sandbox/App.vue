@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import { findNodeById } from "../src/treenode";
-import { BaseTreenode } from "../src/treenode";
+import { BaseUpdatableTreenode } from "../src/treenode";
 import tree from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
@@ -14,7 +14,7 @@ type MyContent = {
     children : MyContent[];
 };
 
-class MyTreenode extends BaseTreenode<MyContent> {
+class MyTreenode extends BaseUpdatableTreenode<MyContent> {
     private _content: MyContent;
     private _subtrees: this[];
     
