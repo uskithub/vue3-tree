@@ -204,12 +204,12 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolea
     return (shouldCommit: boolean, newValue?: InnerTreenode<T>) => {
         console.log("shouldCommit", shouldCommit, node, newValue);
         node.isEditing = false;
+        if (state.reserve === null) return;
         if (shouldCommit && newValue) { // 更新あり
             state.reserve = null;
             state.isModified = true;
             emit("update-node", newValue);
         } else { // 更新なし
-            if (state.reserve === null) return;
             (Object.keys(state.reserve) as (keyof InnerTreenode<InnerTreenode<T>>)[])
                 .forEach(key => {
                     node[key] = (state.reserve as InnerTreenode<InnerTreenode<T>>)[key];
@@ -381,12 +381,12 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             state.reserve = new InnerTreenode<InnerTreenode<T>>(_node);
         } else { // ここは slot を使わないときしか来ないので、name での判断でOK
             if (state.reserve === null) return;
-            if (state.reserve.name === _node.name) { // 更新なし
-                state.reserve = null;
-            } else { // 更新あり
+            if (state.reserve.name !== _node.name) { // 更新あり
                 state.reserve = null;
                 state.isModified = true;
                 emit("update-node", _node);
+            } else { // 更新なし
+                state.reserve = null;
             }
         }
     }
