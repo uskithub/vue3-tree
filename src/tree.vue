@@ -26,7 +26,7 @@ class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
         this.styleClass = JSON.parse(JSON.stringify(node.styleClass));
         this.subtrees = node.subtrees.map(c => new (this.constructor as any)(c));
         this.isDraggable = node.isDraggable;
-        this.isFolding = false;
+        this.isFolding = node.isFolding;
     }
 
     onToggleEditing(id: string, isEditing: boolean): this | null {
