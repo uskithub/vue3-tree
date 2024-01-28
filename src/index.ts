@@ -1,6 +1,6 @@
 import tree from "./tree.vue";
 
 export type { TreeEvents, TreeEventHandlers } from "./tree";
-export type { Treenode } from "./treenode";
-export { BaseTreenode, findNodeById } from "./treenode";
+export type { TreenodeCore } from "./treenode";
+export { findNodeById, BaseTreenode, BaseUpdatableTreenode } from "./treenode";
 export { tree };

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
-import { findNodeById } from "../src/treenode";
-import { BaseUpdatableTreenode } from "../src/treenode";
+import type { TreenodeCore } from "../src/treenode";
+import { findNodeById, BaseUpdatableTreenode } from "../src/treenode";
 import tree from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
@@ -164,10 +164,10 @@ const onClickExport = (event: MouseEvent, node: MyTreenode) => {
     console.log("export", node);
 };
 
-const onUpdateName = (id: string, newName: string) => {
-    const node = findNodeById<MyTreenode>(id, state.treeContent);
-    if (node === null) return;
-    node.content.title = newName;
+const onUpdateNode = (node: TreenodeCore<MyTreenode>) => {
+    const _node = findNodeById<MyTreenode>(node.id, state.treeContent);
+    if (_node === null) return;
+    _node.content.title = node.name;
 };
 
 const onClick = (event: MouseEvent) => {
@@ -186,15 +186,15 @@ const onClick = (event: MouseEvent) => {
 <template lang="pug">
 main
   button(@click="onClick") toggle contents
-  //- h1 default
-  //- tree(
-  //-   :node="state.treeContent"
-  //-   :version="state.version"
-  //-   @arrange="onArrange"
-  //-   @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
-  //-   @update-name="onUpdateName"
-  //- )
-  //- textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
+  h1 default
+  tree(
+    :node="state.treeContent"
+    :version="state.version"
+    @arrange="onArrange"
+    @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
+    @update-node="onUpdateNode"
+  )
+  textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
   h1 using slot
   tree(
@@ -202,7 +202,7 @@ main
     :version="state.version"
     @arrange="onArrange"
     @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
-    @update-name="onUpdateName"
+    @update-node="onUpdateNode"
   )
     template(v-slot="slotProps")
       input(

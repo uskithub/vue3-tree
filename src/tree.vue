@@ -70,7 +70,7 @@ const slots = useSlots();
 // @note: stateを一箇所に集めないと処理上の様々なな判断が困難なため、stateの保持および処理はRootコンポーネント（tree）で行い、
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
-const emit = defineEmits<TreeEvents<InnerTreenode<T>>>();
+const emit = defineEmits<TreeEvents<U, InnerTreenode<T>>>();
 
 /**
  * targetUl が ofElem 自身かその子孫の場合 true を返します。
