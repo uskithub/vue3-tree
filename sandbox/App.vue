@@ -221,13 +221,14 @@ const onClick = (event: MouseEvent) => {
 
 const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
     "arrange" : (node: MyTreenode
-        , from: { id: string; node: MyTreenode; }
-        , to: { id: string; node: MyTreenode; }
-      , index: number) => {
+                , from: { id: string; node: MyTreenode; }
+                , to: { id: string; node: MyTreenode; }
+                , index: number) => {
         console.log("arrange", node, from, to, index);
         const _from = findNodeById<MyTreenode>(from.id, state.treeContent);
         const _to = findNodeById<MyTreenode>(to.id, state.treeContent);
         if (_from === null || _to === null) return;
+        // TODO: MyContentのほうが変わっていない
         // 元親から削除
         _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
         // 新親に追加
