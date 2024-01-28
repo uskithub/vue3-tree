@@ -416,7 +416,7 @@ ul.tree
         :depth="0", 
         :isHovering="state.tree.isHovering===true", 
         :isEditing="state.tree.isEditing===true",
-        :endEditing="endEditingClosureBuilder(state.tree)"
+        :endEditing="(shouldCommit, newValue?) => (endEditingClosureBuilder(state.tree))(shouldCommit, newValue)"
       )
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(
@@ -459,7 +459,7 @@ ul.tree
             :depth="1", 
             :isHovering="childnode.isHovering===true", 
             :isEditing="childnode.isEditing===true",
-            :endEditing="endEditingClosureBuilder(childnode)"
+            :endEditing="(shouldCommit, newValue?) => (endEditingClosureBuilder(childnode))(shouldCommit, newValue)"
           )
           span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
           input(
