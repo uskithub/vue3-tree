@@ -168,6 +168,7 @@ const onUpdateNode = (node: TreenodeCore<MyTreenode>) => {
     const _node = findNodeById<MyTreenode>(node.id, state.treeContent);
     if (_node === null) return;
     _node.content.title = node.name;
+    state.version += 1;
 };
 
 const onClick = (event: MouseEvent) => {
