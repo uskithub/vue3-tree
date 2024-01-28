@@ -416,7 +416,7 @@ ul.tree
         :depth="0", 
         :isHovering="state.tree.isHovering===true", 
         :isEditing="state.tree.isEditing===true",
-        :endEditing="(shouldCommit, newValue?) => (endEditingClosureBuilder(state.tree))(shouldCommit, newValue)"
+        :endEditing="(shouldCommit: boolean, newValue?: InnerTreenode<T>) => (endEditingClosureBuilder(state.tree))(shouldCommit, newValue)"
       )
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(

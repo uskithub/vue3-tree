@@ -66,7 +66,7 @@ ul.subtree(
         :depth="props.depth",
         :isHovering="childnode.isHovering===true",
         :isEditing="childnode.isEditing===true",
-        :endEditing="(shouldCommit, newValue?) => (props.endEditingClosureBuilder(childnode))(shouldCommit, newValue)"
+        :endEditing="(shouldCommit: boolean, newValue?: InnerTreenode<T>) => (props.endEditingClosureBuilder(childnode))(shouldCommit, newValue)"
       )
       span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
       input(
