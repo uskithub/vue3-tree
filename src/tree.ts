@@ -11,7 +11,7 @@ export type TreeEventHandlers<U, T extends BaseTreenode<U>> = {
     "arrange" : (node: T, from: { id: string; node: T; }, to: { id: string; node: T; }, index: number) => void;
     "toggle-folding" : (id: string) => void;
     "toggle-editing" : (id: string, isEditing: boolean) => void;
-    "update-node" : (node: TreenodeCore<U>) => void;
+    "update-node" : (updatedNode: TreenodeCore<U>) => void;
 };
 
 // export type TreeEvents<T> = DefineEvents<TreeEventHandlers<T>>

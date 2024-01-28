@@ -6,6 +6,7 @@ import tree from "../src/tree.vue";
 
 import { reactive } from "@vue/reactivity";
 import { watch } from "vue";
+import type { TreeEventHandlers } from "../src/tree";
 
 type MyContent = {
     id : string;
@@ -199,40 +200,12 @@ const state = reactive<{
 };
 
 watch(state.treeContent, (newVal, oldVal) => {
-  console.log("watch", newVal.isFolding, oldVal.isFolding);
+    console.log("watch", newVal.isFolding, oldVal.isFolding);
 });
 
-const onArrange = (
-    node : MyTreenode
-    , from : {
-        id : string
-        , node : MyTreenode
-    }
-    , to : {
-        id : string
-        , node : MyTreenode
-    }
-    , index : number
-) => {
-    const _from = findNodeById<MyTreenode>(from.id, state.treeContent);
-    const _to = findNodeById<MyTreenode>(to.id, state.treeContent);
-    if (_from === null || _to === null) return;
-    // 元親から削除
-    _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
-    // 新親に追加
-    _to.content.children.splice(index, 0, node.content);
-    _to.isFolding = false;
-};
 
 const onClickExport = (event: MouseEvent, node: MyTreenode) => {
     console.log("export", node);
-};
-
-const onUpdateNode = (node: TreenodeCore<MyTreenode>) => {
-    const _node = findNodeById<MyTreenode>(node.id, state.treeContent);
-    if (_node === null) return;
-    _node.content.title = node.name;
-    state.version += 1;
 };
 
 const onClick = (event: MouseEvent) => {
@@ -246,6 +219,35 @@ const onClick = (event: MouseEvent) => {
     state.isContent1 = !state.isContent1;
 };
 
+const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
+    "arrange" : (node: MyTreenode
+        , from: { id: string; node: MyTreenode; }
+        , to: { id: string; node: MyTreenode; }
+      , index: number) => {
+        console.log("arrange", node, from, to, index);
+        const _from = findNodeById<MyTreenode>(from.id, state.treeContent);
+        const _to = findNodeById<MyTreenode>(to.id, state.treeContent);
+        if (_from === null || _to === null) return;
+        // 元親から削除
+        _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
+        // 新親に追加
+        _to.content.children.splice(index, 0, node.content);
+        _to.isFolding = false;
+    }
+    , "toggle-folding" : (id: string) => {
+        state.treeContent.onToggleFolding(id);
+    }
+    , "toggle-editing" : (id: string, isEditing: boolean) => {
+
+    }
+    , "update-node" : (updatedNode: TreenodeCore<MyContent>) => {
+        console.log("update", updatedNode);
+        const _node = findNodeById<MyTreenode>(updatedNode.id, state.treeContent);
+        if (_node === null) return;
+        _node.content.title = updatedNode.name;
+        state.version += 1;
+    }
+}
 </script>
 
 <template lang="pug">
@@ -255,9 +257,9 @@ main
   tree(
     :node="state.treeContent"
     :version="state.version"
-    @arrange="onArrange"
-    @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
-    @update-node="onUpdateNode"
+    @arrange="handlers['arrange']"
+    @toggle-folding="handlers['toggle-folding']"
+    @update-node="handlers['update-node']"
   )
   textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
@@ -265,9 +267,9 @@ main
   tree(
     :node="state.treeContent"
     :version="state.version"
-    @arrange="onArrange"
-    @toggle-folding="(id) => state.treeContent.onToggleFolding(id)"
-    @update-node="onUpdateNode"
+    @arrange="handlers['arrange']"
+    @toggle-folding="handlers['toggle-folding']"
+    @update-node="handlers['update-node']"
   )
     template(v-slot="slotProps")
       input(
