@@ -199,16 +199,14 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean, newValue?: InnerTreenode<T>) => void => {
-    console.log("endEditingClosureBuilder", node);
-    return (shouldCommit: boolean, newValue?: InnerTreenode<T>) => {
-        console.log("shouldCommit", shouldCommit, node, newValue);
+const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean) => void => {
+    return (shouldCommit: boolean = true) => {
         node.isEditing = false;
         if (state.reserve === null) return;
-        if (shouldCommit && newValue) { // 更新あり
+        if (shouldCommit) { // 更新あり
             state.reserve = null;
             state.isModified = true;
-            emit("update-node", newValue);
+            emit("update-node", node);
         } else { // 更新なし
             (Object.keys(state.reserve) as (keyof InnerTreenode<InnerTreenode<T>>)[])
                 .forEach(key => {
@@ -416,7 +414,7 @@ ul.tree
         :depth="0", 
         :isHovering="state.tree.isHovering===true", 
         :isEditing="state.tree.isEditing===true",
-        :endEditing="(shouldCommit: boolean, newValue?: InnerTreenode<T>) => (endEditingClosureBuilder(state.tree))(shouldCommit, newValue)"
+        :endEditing="(shouldCommit: boolean) => (endEditingClosureBuilder(state.tree))(shouldCommit)"
       )
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(
@@ -459,7 +457,7 @@ ul.tree
             :depth="1", 
             :isHovering="childnode.isHovering===true", 
             :isEditing="childnode.isEditing===true",
-            :endEditing="(shouldCommit, newValue?) => (endEditingClosureBuilder(childnode))(shouldCommit, newValue)"
+            :endEditing="(shouldCommit) => (endEditingClosureBuilder(childnode))(shouldCommit)"
           )
           span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
           input(

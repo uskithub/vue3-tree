@@ -210,7 +210,7 @@ main
         v-if="slotProps.isEditing"
         v-model="slotProps.node.name"
         v-focus
-        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(true, slotProps.node.name); }"
+        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(); }"
       )
       template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
         span.header {{ slotProps.depth }} : {{ slotProps.node.name }}

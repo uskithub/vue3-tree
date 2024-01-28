@@ -11,7 +11,7 @@ const props = defineProps<{
     parent : T | undefined;
     node : T;
     depth : Number;
-    endEditingClosureBuilder : (node: T) => (newName: string) => void;
+    endEditingClosureBuilder : (node: T) => ((shouldCommit: boolean) => void);
 }>();
 
 const slots = useSlots();
@@ -66,7 +66,7 @@ ul.subtree(
         :depth="props.depth",
         :isHovering="childnode.isHovering===true",
         :isEditing="childnode.isEditing===true",
-        :endEditing="(shouldCommit: boolean, newValue?: InnerTreenode<T>) => (props.endEditingClosureBuilder(childnode))(shouldCommit, newValue)"
+        :endEditing="(shouldCommit: boolean) => (props.endEditingClosureBuilder(childnode))(shouldCommit)"
       )
       span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
       input(
