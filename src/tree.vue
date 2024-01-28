@@ -199,7 +199,7 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilder = (node: InnerTreenode<T>): (shouldCommit: boolean) => void => {
+const endEditingClosureBuilder = (node: InnerTreenode<T>): ((shouldCommit: boolean) => void) => {
     return (shouldCommit: boolean = true) => {
         node.isEditing = false;
         if (state.reserve === null) return;
