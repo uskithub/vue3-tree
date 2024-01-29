@@ -36,6 +36,30 @@ class MyTreenode extends BaseUpdatableTreenode<MyContent> {
     update(newContent: MyContent) {
         this._content = newContent;
     }
+
+    findNodeById(id: string, node: MyContent = this._content): MyContent | null {
+        if (node.id === id) { return node; }
+
+        for (const child of node.children) {
+            const found = this.findNodeById(id, child);
+            if (found) { return found; }
+        }
+        return null;
+    }
+
+    arrange(targetId : string, from: string, to: string, index: number) {
+        const node = this.findNodeById(targetId);
+        const exParent = this.findNodeById(from);
+        const newParent = this.findNodeById(to);
+        if (node === null || exParent === null || newParent === null) return;
+        // 元親から削除
+        exParent.children = exParent.children.filter((child: MyContent) => child.id !== targetId);
+        // 新親に追加
+        newParent.children.splice(index, 0, node);
+        // newParent.isFolding = false;
+        // サブツリーを再構築
+        this._subtrees = this.content.children.map(c => new (this.constructor as any)(c));
+    }
 }
 
 // custom directive for autofocus
@@ -203,7 +227,6 @@ watch(state.treeContent, (newVal, oldVal) => {
     console.log("watch", newVal.isFolding, oldVal.isFolding);
 });
 
-
 const onClickExport = (event: MouseEvent, node: MyTreenode) => {
     console.log("export", node);
 };
@@ -225,22 +248,13 @@ const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
                 , to: { id: string; node: MyTreenode; }
                 , index: number) => {
         console.log("arrange", node, from, to, index);
-        const _from = findNodeById<MyTreenode>(from.id, state.treeContent);
-        const _to = findNodeById<MyTreenode>(to.id, state.treeContent);
-        if (_from === null || _to === null) return;
-        // TODO: MyContentのほうが変わっていない
-        // 元親から削除
-        _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
-        // 新親に追加
-        _to.content.children.splice(index, 0, node.content);
-        _to.isFolding = false;
+        state.treeContent.arrange(node.id, from.id, to.id, index);
+        state.version += 1;
     }
     , "toggle-folding" : (id: string) => {
         state.treeContent.onToggleFolding(id);
     }
-    , "toggle-editing" : (id: string, isEditing: boolean) => {
-
-    }
+    , "toggle-editing" : (id: string, isEditing: boolean) => {}
     , "update-node" : (updatedNode: TreenodeCore<MyContent>) => {
         console.log("update", updatedNode);
         const _node = findNodeById<MyTreenode>(updatedNode.id, state.treeContent);
