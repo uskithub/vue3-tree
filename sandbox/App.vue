@@ -254,11 +254,11 @@ const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
         state.treeContent.onToggleFolding(id);
     }
     , "toggle-editing" : (id: string, isEditing: boolean) => {}
-    , "update-node" : (updatedNode: TreenodeCore<MyContent>) => {
-        console.log("update", updatedNode);
-        const _node = findNodeById<MyTreenode>(updatedNode.id, state.treeContent);
+    , "update-name" : (id: string, newValue: string) => {
+        console.log("update", id, newValue);
+        const _node = findNodeById<MyContent, MyTreenode>(id, state.treeContent);
         if (_node === null) return;
-        _node.content.title = updatedNode.name;
+        _node.content.title = newValue;
         state.version += 1;
     }
 }
@@ -273,7 +273,7 @@ main
     :version="state.version"
     @arrange="handlers['arrange']"
     @toggle-folding="handlers['toggle-folding']"
-    @update-node="handlers['update-node']"
+    @update-name="handlers['update-name']"
   )
   textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
@@ -283,7 +283,7 @@ main
     :version="state.version"
     @arrange="handlers['arrange']"
     @toggle-folding="handlers['toggle-folding']"
-    @update-node="handlers['update-node']"
+    @update-name="handlers['update-name']"
   )
     template(v-slot="slotProps")
       input(

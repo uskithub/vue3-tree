@@ -208,7 +208,7 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): ((shouldCommit: boole
         if (shouldCommit) { // 更新あり
             state.reserve = null;
             state.isModified = true;
-            emit("update-node", node);
+            emit("update-name", node.id, node.name);
         } else { // 更新なし
             node.name = state.reserve.name;
             state.reserve = null;
@@ -381,7 +381,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             if (state.reserve.name !== _node.name) { // 更新あり
                 state.reserve = null;
                 state.isModified = true;
-                emit("update-node", _node);
+                emit("update-name", _node.id, _node.name);
             } else { // 更新なし
                 state.reserve = null;
             }
