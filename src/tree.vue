@@ -1,9 +1,11 @@
 <script setup lang="ts" generic="U, T extends BaseUpdatableTreenode<U>">
-// view
 import type { TreeEvents, TreeProps } from "./tree";
-import treenode from "./treenode.vue";
-import type { BaseTreenode, BaseUpdatableTreenode, TreenodeEventHandlers, Mutable } from "./treenode";
+import type { BaseTreenode, BaseUpdatableTreenode, TreenodeEventHandlers } from "./treenode";
 import { BaseEditableTreenode, findNodeById } from "./treenode";
+
+// view
+import treenode from "./treenode.vue";
+
 import { nextTick, reactive, useSlots, watch } from "vue";
 import "@mdi/font/css/materialdesignicons.css";
 
@@ -30,14 +32,14 @@ class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
     }
 
     onToggleEditing(id: string, isEditing: boolean): this | null {
-        const _node = findNodeById<this>(id, this);
+        const _node = findNodeById<U, this>(id, this);
         if (_node === null) return null;
         _node.isEditing = isEditing;
         return _node;
     }
 
     onToggleHovering(id: string, isHovering: boolean) {
-        const _node = findNodeById<this>(id, this);
+        const _node = findNodeById<U, this>(id, this);
         if (_node === null) return;
         _node.isHovering = isHovering;
     }
@@ -208,10 +210,7 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): ((shouldCommit: boole
             state.isModified = true;
             emit("update-node", node);
         } else { // 更新なし
-            (Object.keys(state.reserve) as (keyof InnerTreenode<InnerTreenode<T>>)[])
-                .forEach(key => {
-                    node[key] = (state.reserve as InnerTreenode<InnerTreenode<T>>)[key];
-                 });
+            node.name = state.reserve.name;
             state.reserve = null;
         }
     };

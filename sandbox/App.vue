@@ -1,12 +1,11 @@
 <script setup lang="ts">
 
-import type { TreenodeCore } from "../src/treenode";
 import { findNodeById, BaseUpdatableTreenode } from "../src/treenode";
+import type { TreenodeCore } from "../src/treenode";
+import type { TreeEventHandlers } from "../src/tree";
 import tree from "../src/tree.vue";
 
-import { reactive } from "@vue/reactivity";
-import { watch } from "vue";
-import type { TreeEventHandlers } from "../src/tree";
+import { reactive, watch } from "vue";
 
 type MyContent = {
     id : string;

@@ -45,13 +45,13 @@ export abstract class BaseTreenode<T> implements TreenodeCore<T> {
     isFolding: boolean | undefined;
 
     onToggleFolding(id: string) {
-        const node = findNodeById<this>(id, this);
+        const node = findNodeById<T, this>(id, this);
         if (node === null) return;
         node.isFolding = !node.isFolding;
         console.log(`onToggleFolding: ${node.name} ${node.isFolding}`, node);
     }
 
-    toJSON() {
+    toJSON(this: BaseTreenode<T>) {
         return {
             id: this.id
             , name: this.name
@@ -99,13 +99,13 @@ export type Mutable<Type> = {
     -readonly [Property in keyof Type]: Type[Property];
 };
 
-export function findNodeById<T extends TreenodeCore<any>>(id: string, node: T): T | null {
+export function findNodeById< U, T extends TreenodeCore<U>>(id: string, node: T): T | null {
     if (node.id === id) {
         return node;
     }
 
     for (const subtree of node.subtrees) {
-        const found = findNodeById<T>(id, subtree);
+        const found = findNodeById<U, T>(id, subtree);
         if (found) {
             return found;
         }

@@ -1,6 +1,4 @@
-// import type { DefineEvents } from "./treenode";
-
-import { BaseTreenode, TreenodeCore } from "./treenode";
+import type { BaseTreenode, TreenodeCore } from "./treenode";
 
 export type TreeProps<U, T extends BaseTreenode<U>> = {
     node: T;
