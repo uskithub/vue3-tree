@@ -168,6 +168,7 @@ const state = reactive<{
 watch(() => props.version, (newVal: number) => {
     console.log("version", newVal);
     state.tree = new InnerTreenode(props.node);
+    state.isModified = false;
 });
 
 /**

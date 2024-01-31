@@ -1,4 +1,6 @@
-/*
+/**
+ * TreenodeEventHandlers から TreenodeEvents を自動生するためDefineEventsを作ったが、コンパイルが通らない。 * @see: https://github.com/vuejs/core/issues/8286
+ * 
  * [vite:vue] [@vue/compiler-sfc] Failed to resolve index type into finite keys
  * 
  * /Users/yusuke/Workspaces/vue3-tree/src/treenode.ts
