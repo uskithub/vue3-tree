@@ -26,7 +26,7 @@ class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
         this.id = node.id;
         this.name = node.name;
         this.styleClass = JSON.parse(JSON.stringify(node.styleClass));
-        this.subtrees = node.subtrees.map(c => new (this.constructor as any)(c));
+        this.subtrees = node.subtrees.map(x => new (this.constructor as any)(x));
         this.isDraggable = node.isDraggable;
         this.isFolding = node.isFolding;
     }
@@ -325,11 +325,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                 newParent.removeEventListener("dragover", onDragover);
             });
 
-        emit("arrange", node
-            , { id: exParent.dataset.id, node: exPrarentNode }
-            , { id: state.draggingOn.id, node: state.draggingOn.node }
-            , index
-        );
+        emit("rearrange", node.id, exParent.dataset.id, state.draggingOn.id, index);
 
         state.dragging = null;
         state.draggingOn = null;

@@ -46,7 +46,7 @@ class MyTreenode extends BaseUpdatableTreenode<MyContent> {
         return null;
     }
 
-    arrange(targetId : string, from: string, to: string, index: number) {
+    rearrange(targetId : string, from: string, to: string, index: number) {
         const node = this.findNodeById(targetId);
         const exParent = this.findNodeById(from);
         const newParent = this.findNodeById(to);
@@ -242,12 +242,9 @@ const onClick = (event: MouseEvent) => {
 };
 
 const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
-    "arrange" : (node: MyTreenode
-                , from: { id: string; node: MyTreenode; }
-                , to: { id: string; node: MyTreenode; }
-                , index: number) => {
-        console.log("arrange", node, from, to, index);
-        state.treeContent.arrange(node.id, from.id, to.id, index);
+    "rearrange" : (targetId: string, from: string, to: string, index: number) => {
+        console.log("rearrange", targetId, from, to, index);
+        state.treeContent.rearrange(targetId, from, to, index);
         state.version += 1;
     }
     , "toggle-folding" : (id: string) => {
@@ -271,7 +268,7 @@ main
   tree(
     :node="state.treeContent"
     :version="state.version"
-    @arrange="handlers['arrange']"
+    @rearrange="handlers['rearrange']"
     @toggle-folding="handlers['toggle-folding']"
     @update-name="handlers['update-name']"
   )
@@ -281,7 +278,7 @@ main
   tree(
     :node="state.treeContent"
     :version="state.version"
-    @arrange="handlers['arrange']"
+    @rearrange="handlers['rearrange']"
     @toggle-folding="handlers['toggle-folding']"
     @update-name="handlers['update-name']"
   )
