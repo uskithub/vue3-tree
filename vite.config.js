@@ -1,3 +1,5 @@
+/// <reference types="vitest" />
+
 "use strict";
 const { defineConfig } = require("vite");
 import vue from "@vitejs/plugin-vue";
@@ -17,6 +19,9 @@ module.exports = defineConfig({
             external: ["vue"],
             output: { globals: { vue: "Vue" } },
         },
+    },
+    test : {
+        environment: "happy-dom"
     }
 });
 //# sourceMappingURL=vite.config.js.map

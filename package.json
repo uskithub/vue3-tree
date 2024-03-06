@@ -21,7 +21,6 @@
     "build:types": "vue-tsc --project tsconfig.build-types.json --declaration --emitDeclarationOnly --outDir dist/types",
     "typecheck": "vue-tsc --project tsconfig.build-types.json --noEmit",
     "test": "vitest"
-
   },
   "publishConfig": {
     "access": "public"
@@ -41,8 +40,10 @@
     "@types/node": "^18.11.18",
     "@vitejs/plugin-vue": "^4.0.0",
     "@volar/vue-language-plugin-pug": "^1.0.24",
+    "@vue/language-plugin-pug": "^2.0.5",
     "@vue/test-utils": "^2.4.4",
     "@vue/tsconfig": "^0.1.3",
+    "happy-dom": "^13.6.2",
     "pug": "^3.0.2",
     "sass": "^1.57.1",
     "shx": "^0.3.4",

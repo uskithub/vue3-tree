@@ -1,6 +1,6 @@
 import { mount } from "@vue/test-utils"
 import { describe, expect, test } from "vitest"
-import { BaseUpdatableTreenode, tree } from "src"
+import { BaseUpdatableTreenode, tree } from "../src";
 
 type MyContent = {
     id : string;
