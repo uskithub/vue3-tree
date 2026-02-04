@@ -19,7 +19,7 @@
         "default": "./dist/vue3-tree.umd.js"
       }
     },
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/vue3-tree.css"
   },
   "sideEffects": [
     "*.css",
