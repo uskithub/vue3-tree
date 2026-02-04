@@ -1,9 +1,7 @@
 <script setup lang="ts">
 
 import { findNodeById, BaseUpdatableTreenode } from "../src/treenode";
-import type { TreenodeCore } from "../src/treenode";
 import type { TreeEventHandlers } from "../src/tree";
-import tree from "../src/tree.vue";
 
 import { reactive, watch } from "vue";
 

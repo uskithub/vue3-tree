@@ -1,5 +1,5 @@
 {
-    "extends": "@vue/tsconfig/tsconfig.web.json",
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
     "exclude": ["node_modules", "sandbox/**/*", "test/**/*"],
     "include": ["src/**/*", "src/**/*.vue"],
     "compilerOptions": {

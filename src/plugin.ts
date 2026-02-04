@@ -5,9 +5,7 @@ import VTreenode from "./treenode.vue";
 // Cast generic components to Component for plugin registration
 // This is necessary because Vue's app.component() doesn't accept generic component types directly
 // Generic Vue 3 components require double assertion through 'unknown'
-// @ts-expect-error - Generic Vue components are not assignable to Component type
 const VTreeComponent: Component = VTree;
-// @ts-expect-error - Generic Vue components are not assignable to Component type
 const VTreenodeComponent: Component = VTreenode;
 
 /**
@@ -45,8 +43,8 @@ export interface Vue3TreePluginOptions {
  */
 export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin {
   const { components = {} } = options;
-  const treeName = components.tree ?? "VTree";
-  const treenodeName = components.treenode ?? "VTreenode";
+  const treeName = components.tree ?? "tree";
+  const treenodeName = components.treenode ?? "treenode";
 
   return {
     install(app: App) {
@@ -72,7 +70,7 @@ export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin {
  */
 export const Vue3TreePlugin: Plugin = {
   install(app: App) {
-    app.component("VTree", VTreeComponent);
-    app.component("VTreenode", VTreenodeComponent);
+    app.component("tree", VTreeComponent);
+    app.component("treenode", VTreenodeComponent);
   },
 };

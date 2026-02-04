@@ -1,7 +1,9 @@
 {
-    "extends": "@vue/tsconfig/tsconfig.web.json",
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
     "include": ["env.d.ts", "sandbox/**/*", "sandbox/**/*.vue", "src/**/*", "src/**/*.vue"],
     "compilerOptions": {
-        "composite": true
+        "composite": true,
+        "noEmit": false,
+        "emitDeclarationOnly": true
     }
 }
