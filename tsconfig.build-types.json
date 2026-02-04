@@ -1,7 +1,16 @@
 {
-    "exclude": ["node_modules"],
-    "include": ["src/**/*"],
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "exclude": ["node_modules", "sandbox/**/*", "test/**/*"],
+    "include": ["src/**/*", "src/**/*.vue"],
     "compilerOptions": {
-        "esModuleInterop": true
+        "composite": true,
+        "esModuleInterop": true,
+        "declaration": true,
+        "declarationMap": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        }
     }
 }

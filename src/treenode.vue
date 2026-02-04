@@ -1,6 +1,6 @@
-<script setup lang="ts" generic="T extends Treenode<any>">
+<script setup lang="ts" generic="T extends BaseEditableTreenode<any>">
+import type { BaseEditableTreenode, TreenodeEvents, TreenodeEventHandlers } from "./treenode";
 import { useSlots } from "vue";
-import type { Treenode, TreenodeEvents, TreenodeEventHandlers } from "./treenode";
 
 // custom directive for autofocus
 const vFocus = {
@@ -11,7 +11,7 @@ const props = defineProps<{
     parent : T | undefined;
     node : T;
     depth : Number;
-    endEditingClosureBuilder : (node: T) => (newName: string) => void;
+    endEditingClosureBuilder : (node: T) => ((shouldCommit: boolean) => void);
 }>();
 
 const slots = useSlots();
@@ -31,7 +31,6 @@ const handlers: TreenodeEventHandlers<T> = {
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing)
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering)
 }
-
 </script>
 
 <template lang="pug">
@@ -67,7 +66,7 @@ ul.subtree(
         :depth="props.depth",
         :isHovering="childnode.isHovering===true",
         :isEditing="childnode.isEditing===true",
-        :endEditing="props.endEditingClosureBuilder(childnode)"
+        :endEditing="(shouldCommit: boolean) => (props.endEditingClosureBuilder(childnode))(shouldCommit)"
       )
       span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
       input(

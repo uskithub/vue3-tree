@@ -1,0 +1,525 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Component > is a Vue instance 1`] = `
+<ul
+  class="tree"
+  data-v-69ee79a6=""
+>
+  <li
+    data-id="0"
+    data-v-69ee79a6=""
+  >
+    <div
+      class="tree-header"
+      data-v-69ee79a6=""
+    >
+      <i
+        class="mdi mdi-menu-down"
+        data-v-69ee79a6=""
+      />
+      
+      
+      <span
+        data-v-69ee79a6=""
+      >
+        Vue3-treeの動作を確認する(0)
+      </span>
+      <!--v-if-->
+    </div>
+    <ul
+      class="subtree"
+      data-id="0"
+      data-v-69ee79a6=""
+    >
+      
+      <li
+        class="undefined"
+        data-id="1"
+        data-v-69ee79a6=""
+        draggable="true"
+      >
+        <div
+          class="tree-item"
+          data-v-69ee79a6=""
+        >
+          <i
+            class="mdi mdi-menu-down"
+            data-v-69ee79a6=""
+          />
+          
+          
+          <span
+            data-v-69ee79a6=""
+          >
+            初期表示が正しいこと(1)
+          </span>
+          <!--v-if-->
+        </div>
+        <ul
+          class="subtree"
+          data-id="1"
+          data-v-69ee79a6=""
+        >
+          
+          <li
+            class="undefined"
+            data-id="11"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-circle-small"
+              />
+              
+              
+              <span>
+                ツリーすべてが表示されること(11)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="11"
+            >
+              
+              
+            </ul>
+          </li>
+          <li
+            class="undefined"
+            data-id="12"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-circle-small"
+              />
+              
+              
+              <span>
+                階層構造に間違いがないこと(12)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="12"
+            >
+              
+              
+            </ul>
+          </li>
+          <li
+            class="undefined"
+            data-id="13"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-circle-small"
+              />
+              
+              
+              <span>
+                キャレットの開閉が正しいこと(13)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="13"
+            >
+              
+              
+            </ul>
+          </li>
+          
+        </ul>
+      </li>
+      <li
+        class="undefined"
+        data-id="2"
+        data-v-69ee79a6=""
+        draggable="true"
+      >
+        <div
+          class="tree-item"
+          data-v-69ee79a6=""
+        >
+          <i
+            class="mdi mdi-menu-down"
+            data-v-69ee79a6=""
+          />
+          
+          
+          <span
+            data-v-69ee79a6=""
+          >
+            アクションによる表示の変化が正しくされること(2)
+          </span>
+          <!--v-if-->
+        </div>
+        <ul
+          class="subtree"
+          data-id="2"
+          data-v-69ee79a6=""
+        >
+          
+          <li
+            class="undefined"
+            data-id="21"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-menu-down"
+              />
+              
+              
+              <span>
+                キャレットが正しく切り替わること(21)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="21"
+            >
+              
+              <li
+                class="undefined"
+                data-id="211"
+                draggable="true"
+              >
+                <div
+                  class="tree-item"
+                >
+                  <i
+                    class="mdi mdi-circle-small"
+                  />
+                  
+                  
+                  <span>
+                    開いているときにクリックで閉じること(211)
+                  </span>
+                  <!--v-if-->
+                </div>
+                <ul
+                  class="subtree"
+                  data-id="211"
+                >
+                  
+                  
+                </ul>
+              </li>
+              <li
+                class="undefined"
+                data-id="212"
+                draggable="true"
+              >
+                <div
+                  class="tree-item"
+                >
+                  <i
+                    class="mdi mdi-circle-small"
+                  />
+                  
+                  
+                  <span>
+                    閉じているときにクリックで開くこと(212)
+                  </span>
+                  <!--v-if-->
+                </div>
+                <ul
+                  class="subtree"
+                  data-id="212"
+                >
+                  
+                  
+                </ul>
+              </li>
+              
+            </ul>
+          </li>
+          <li
+            class="undefined"
+            data-id="22"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-menu-down"
+              />
+              
+              
+              <span>
+                ドラッグが正しく動作すること(22)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="22"
+            >
+              
+              <li
+                class="undefined"
+                data-id="221"
+                draggable="true"
+              >
+                <div
+                  class="tree-item"
+                >
+                  <i
+                    class="mdi mdi-circle-small"
+                  />
+                  
+                  
+                  <span>
+                    ドラッグすると元と同様の要素が半透明で表示されること(221)
+                  </span>
+                  <!--v-if-->
+                </div>
+                <ul
+                  class="subtree"
+                  data-id="221"
+                >
+                  
+                  
+                </ul>
+              </li>
+              <li
+                class="undefined"
+                data-id="222"
+                draggable="true"
+              >
+                <div
+                  class="tree-item"
+                >
+                  <i
+                    class="mdi mdi-menu-down"
+                  />
+                  
+                  
+                  <span>
+                    ドロップターゲット（ピンク）が正しく表示されること(222)
+                  </span>
+                  <!--v-if-->
+                </div>
+                <ul
+                  class="subtree"
+                  data-id="222"
+                >
+                  
+                  <li
+                    class="undefined"
+                    data-id="2221"
+                    draggable="true"
+                  >
+                    <div
+                      class="tree-item"
+                    >
+                      <i
+                        class="mdi mdi-circle-small"
+                      />
+                      
+                      
+                      <span>
+                        ドラッグが他要素の子領域に入ったとき、ドロップターゲットが表示されること(2221)
+                      </span>
+                      <!--v-if-->
+                    </div>
+                    <ul
+                      class="subtree"
+                      data-id="2221"
+                    >
+                      
+                      
+                    </ul>
+                  </li>
+                  <li
+                    class="undefined"
+                    data-id="2222"
+                    draggable="true"
+                  >
+                    <div
+                      class="tree-item"
+                    >
+                      <i
+                        class="mdi mdi-circle-small"
+                      />
+                      
+                      
+                      <span>
+                        ドロップターゲット表示中、ドラッグが別の要素の子領域に入ると、ドロップターゲットが更新されること(2222)
+                      </span>
+                      <!--v-if-->
+                    </div>
+                    <ul
+                      class="subtree"
+                      data-id="2222"
+                    >
+                      
+                      
+                    </ul>
+                  </li>
+                  <li
+                    class="undefined"
+                    data-id="2223"
+                    draggable="true"
+                  >
+                    <div
+                      class="tree-item"
+                    >
+                      <i
+                        class="mdi mdi-circle-small"
+                      />
+                      
+                      
+                      <span>
+                        ドロップターゲット表示中、ドラッグが元の領域に入ると、ドロップターゲットが消えること(2223)
+                      </span>
+                      <!--v-if-->
+                    </div>
+                    <ul
+                      class="subtree"
+                      data-id="2223"
+                    >
+                      
+                      
+                    </ul>
+                  </li>
+                  
+                </ul>
+              </li>
+              
+            </ul>
+          </li>
+          
+        </ul>
+      </li>
+      <li
+        class="undefined"
+        data-id="3"
+        data-v-69ee79a6=""
+        draggable="true"
+      >
+        <div
+          class="tree-item"
+          data-v-69ee79a6=""
+        >
+          <i
+            class="mdi mdi-menu-down"
+            data-v-69ee79a6=""
+          />
+          
+          
+          <span
+            data-v-69ee79a6=""
+          >
+            表示通りにノードの更新が行われていること(3)
+          </span>
+          <!--v-if-->
+        </div>
+        <ul
+          class="subtree"
+          data-id="3"
+          data-v-69ee79a6=""
+        >
+          
+          <li
+            class="undefined"
+            data-id="31"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-circle-small"
+              />
+              
+              
+              <span>
+                ifFolfing（折りたたまれている）が更新されること(31)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="31"
+            >
+              
+              
+            </ul>
+          </li>
+          <li
+            class="undefined"
+            data-id="32"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-circle-small"
+              />
+              
+              
+              <span>
+                node.nameが更新されること(32)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="32"
+            >
+              
+              
+            </ul>
+          </li>
+          <li
+            class="undefined"
+            data-id="33"
+            draggable="true"
+          >
+            <div
+              class="tree-item"
+            >
+              <i
+                class="mdi mdi-circle-small"
+              />
+              
+              
+              <span>
+                tree内のノードの移動が更新されること(33)
+              </span>
+              <!--v-if-->
+            </div>
+            <ul
+              class="subtree"
+              data-id="33"
+            >
+              
+              
+            </ul>
+          </li>
+          
+        </ul>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+`;

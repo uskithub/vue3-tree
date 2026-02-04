@@ -1,10 +1,9 @@
 <script setup lang="ts">
 
-import { findNodeById } from "../src/treenode";
-import type { Treenode } from "../src/treenode";
-import tree from "../src/tree.vue";
+import { findNodeById, BaseUpdatableTreenode } from "../src/treenode";
+import type { TreeEventHandlers } from "../src/tree";
 
-import { reactive } from "@vue/reactivity";
+import { reactive, watch } from "vue";
 
 type MyContent = {
     id : string;
@@ -13,12 +12,14 @@ type MyContent = {
     children : MyContent[];
 };
 
-class MyTreenode implements Treenode<MyContent> {
+class MyTreenode extends BaseUpdatableTreenode<MyContent> {
     private _content: MyContent;
-    isFolding: boolean;
-
+    private _subtrees: this[];
+    
     constructor(content: MyContent) {
+        super();
         this._content = content;
+        this._subtrees = content.children.map(c => new (this.constructor as any)(c));
         this.isFolding = false;
     }
 
@@ -26,14 +27,35 @@ class MyTreenode implements Treenode<MyContent> {
     get name(): string { return this._content.title; }
     get styleClass(): object | null { return { [this._content.type]: true }; }
     get content(): MyContent { return this._content; }
-    get subtrees(): this[] {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this._content.children.map(c => new (this.constructor as any)(c));
-    }
+    get subtrees(): this[] { return this._subtrees; }
     get isDraggable(): boolean { return true; }
   
     update(newContent: MyContent) {
         this._content = newContent;
+    }
+
+    findNodeById(id: string, node: MyContent = this._content): MyContent | null {
+        if (node.id === id) { return node; }
+
+        for (const child of node.children) {
+            const found = this.findNodeById(id, child);
+            if (found) { return found; }
+        }
+        return null;
+    }
+
+    rearrange(targetId : string, from: string, to: string, index: number) {
+        const node = this.findNodeById(targetId);
+        const exParent = this.findNodeById(from);
+        const newParent = this.findNodeById(to);
+        if (node === null || exParent === null || newParent === null) return;
+        // 元親から削除
+        exParent.children = exParent.children.filter((child: MyContent) => child.id !== targetId);
+        // 新親に追加
+        newParent.children.splice(index, 0, node);
+        // newParent.isFolding = false;
+        // サブツリーを再構築
+        this._subtrees = this.content.children.map(c => new (this.constructor as any)(c));
     }
 }
 
@@ -44,39 +66,103 @@ const vFocus = {
 
 const treeContent = {
   id: "0"
-  , title: "root1"
+  , title: "Vue3-treeの動作を確認する"
   , children: [
     {
       id: "1"
-      , title: "subtree1"
+      , title: "初期表示が正しいこと"
       , children: [
         {
           id: "11"
-          , title: "subtree1-1"
+          , title: "ツリーすべてが表示されること"
           , children: [] as MyContent[]
         } as MyContent
         , {
           id: "12"
-          , title: "subtree1-2"
-          , children: [
-            {
-              id: "121"
-              , title: "subtree1-2-1"
-              , children: [] as MyContent[]
-            } as MyContent
-          ]
+          , title: "階層構造に間違いがないこと"
+          , children: [] as MyContent[]
+        } as MyContent
+        , {
+          id: "13"
+          , title: "キャレットの開閉が正しいこと"
+          , children: [] as MyContent[]
         } as MyContent
       ]
     } as MyContent
     , {
       id: "2"
-      , title: "subtree2"
-      , children: [] as MyContent[]
+      , title: "アクションによる表示の変化が正しくされること"
+      , children: [
+          {
+            id: "21"
+            , title: "キャレットが正しく切り替わること"
+            , children: [
+              {
+                id: "211"
+                , title: "開いているときにクリックで閉じること"
+                , children: [] as MyContent[]
+              } as MyContent
+              , {
+                id: "212"
+                , title: "閉じているときにクリックで開くこと"
+                , children: [] as MyContent[]
+              } as MyContent
+            ]
+          } as MyContent
+          , {
+              id: "22"
+              , title: "ドラッグが正しく動作すること"
+              , children: [
+                {
+                  id: "221"
+                  , title: "ドラッグすると元と同様の要素が半透明で表示されること"
+                  , children: [] as MyContent[]
+                } as MyContent
+                , {
+                  id: "222"
+                  , title: "ドロップターゲット（ピンク）が正しく表示されること"
+                  , children: [
+                      {
+                        id: "2221"
+                        , title: "ドラッグが他要素の子領域に入ったとき、ドロップターゲットが表示されること"
+                        , children: [] as MyContent[]
+                      }
+                      , {
+                        id: "2222"
+                        , title: "ドロップターゲット表示中、ドラッグが別の要素の子領域に入ると、ドロップターゲットが更新されること"
+                        , children: [] as MyContent[]
+                      }
+                      , {
+                        id: "2223"
+                        , title: "ドロップターゲット表示中、ドラッグが元の領域に入ると、ドロップターゲットが消えること"
+                        , children: [] as MyContent[]
+                      }
+                    ]
+                } as MyContent
+              ]
+            } as MyContent
+      ]
     } as MyContent
     , {
       id: "3"
-      , title: "subtree3"
-      , children: [] as MyContent[]
+      , title: "表示通りにノードの更新が行われていること"
+      , children: [
+          {
+            id: "31"
+            , title: "ifFolfing（折りたたまれている）が更新されること"
+            , children: [] as MyContent[]
+          } as MyContent
+          , {
+            id: "32"
+            , title: "node.nameが更新されること"
+            , children: [] as MyContent[]
+          } as MyContent
+          , {
+            id: "33"
+            , title: "tree内のノードの移動が更新されること"
+            , children: [] as MyContent[]
+          } as MyContent
+      ] 
     } as MyContent
   ]
 } as MyContent;
@@ -122,51 +208,24 @@ const treeContent2 = {
 
 const state = reactive<{
     treeContent: MyTreenode;
+    version: number;
     isContent1: boolean;
 }>({
     treeContent: new MyTreenode(treeContent)
+    , version: 0
     , isContent1: true
 }) as {
     treeContent: MyTreenode;
+    version: number;
     isContent1: boolean;
 };
 
-const onArrange = (
-    node : MyTreenode
-    , from : {
-        id : string
-        , node : MyTreenode
-    }
-    , to : {
-        id : string
-        , node : MyTreenode
-    }
-    , index : number
-) => {
-    const _from = findNodeById<MyTreenode>(from.id, state.treeContent);
-    const _to = findNodeById<MyTreenode>(to.id, state.treeContent);
-    if (_from === null || _to === null) return;
-    // 元親から削除
-    _from.content.children = _from.content.children.filter((child: MyContent) => child.id !== node.id);
-    // 新親に追加
-    _to.content.children.splice(index, 0, node.content);
-    _to.isFolding = false;
-};
-
-const onToggleFolding = (id: string) => {
-    const node = findNodeById<MyTreenode>(id, state.treeContent);
-    if (node === null) return;
-    node.isFolding = !node.isFolding;
-};
+watch(state.treeContent, (newVal, oldVal) => {
+    console.log("watch", newVal.isFolding, oldVal.isFolding);
+});
 
 const onClickExport = (event: MouseEvent, node: MyTreenode) => {
     console.log("export", node);
-};
-
-const onUpdateName = (id: string, newName: string) => {
-    const node = findNodeById<MyTreenode>(id, state.treeContent);
-    if (node === null) return;
-    node.content.title = newName;
 };
 
 const onClick = (event: MouseEvent) => {
@@ -180,6 +239,24 @@ const onClick = (event: MouseEvent) => {
     state.isContent1 = !state.isContent1;
 };
 
+const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
+    "rearrange" : (targetId: string, from: string, to: string, index: number) => {
+        console.log("rearrange", targetId, from, to, index);
+        state.treeContent.rearrange(targetId, from, to, index);
+        state.version += 1;
+    }
+    , "toggle-folding" : (id: string) => {
+        state.treeContent.onToggleFolding(id);
+    }
+    , "toggle-editing" : (id: string, isEditing: boolean) => {}
+    , "update-name" : (id: string, newValue: string) => {
+        console.log("update", id, newValue);
+        const _node = findNodeById<MyContent, MyTreenode>(id, state.treeContent);
+        if (_node === null) return;
+        _node.content.title = newValue;
+        state.version += 1;
+    }
+}
 </script>
 
 <template lang="pug">
@@ -188,24 +265,27 @@ main
   h1 default
   tree(
     :node="state.treeContent"
-    @arrange="onArrange"
-    @toggle-folding="onToggleFolding"
-    @update-name="onUpdateName"
+    :version="state.version"
+    @rearrange="handlers['rearrange']"
+    @toggle-folding="handlers['toggle-folding']"
+    @update-name="handlers['update-name']"
   )
+  textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
   h1 using slot
   tree(
     :node="state.treeContent"
-    @arrange="onArrange"
-    @toggle-folding="onToggleFolding"
-    @update-name="onUpdateName"
+    :version="state.version"
+    @rearrange="handlers['rearrange']"
+    @toggle-folding="handlers['toggle-folding']"
+    @update-name="handlers['update-name']"
   )
     template(v-slot="slotProps")
       input(
         v-if="slotProps.isEditing"
         v-model="slotProps.node.name"
         v-focus
-        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(slotProps.node.name); }"
+        @blur="() => { if (slotProps.endEditing) slotProps.endEditing(); }"
       )
       template(v-else-if="slotProps.depth===0 && !slotProps.isHovering")
         span.header {{ slotProps.depth }} : {{ slotProps.node.name }}

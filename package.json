@@ -1,25 +1,39 @@
 {
   "name": "vue3-tree",
   "version": "0.1.0",
+  "description": "A tree component for Vue 3 and Vuetify 3 with drag and drop support",
   "main": "dist/vue3-tree.umd.js",
   "module": "dist/vue3-tree.es.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
-      "import": "./dist/vue3-tree.es.js",
-      "require": "./dist/vue3-tree.umd.js"
+      "import": {
+        "types": "./dist/types/src/index.d.ts",
+        "default": "./dist/vue3-tree.es.js"
+      },
+      "require": {
+        "types": "./dist/types/src/index.d.ts",
+        "default": "./dist/vue3-tree.umd.js"
+      }
     },
     "./style.css": "./dist/style.css"
   },
+  "sideEffects": [
+    "*.css",
+    "*.scss",
+    "*.sass"
+  ],
   "scripts": {
     "dev": "vite",
     "build:clean": "shx rm -rf dist types",
     "build": "yarn typecheck && yarn build:clean && vite build && yarn build:types",
     "build:types": "vue-tsc --project tsconfig.build-types.json --declaration --emitDeclarationOnly --outDir dist/types",
-    "typecheck": "vue-tsc --project tsconfig.build-types.json --noEmit"
+    "typecheck": "vue-tsc --project tsconfig.build-types.json --noEmit",
+    "test": "vitest",
+    "prepublishOnly": "yarn build"
   },
   "publishConfig": {
     "access": "public"
@@ -28,24 +42,57 @@
     "type": "git",
     "url": "https://github.com/uskithub/vue3-tree"
   },
+  "homepage": "https://github.com/uskithub/vue3-tree#readme",
+  "bugs": {
+    "url": "https://github.com/uskithub/vue3-tree/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "vuetify",
+    "vuetify3",
+    "tree",
+    "treeview",
+    "component",
+    "drag-and-drop",
+    "plugin"
+  ],
   "author": "Yusuke SAITO <yusuke.saito@jibunstyle.com>",
   "license": "Apache-2.0",
+  "peerDependencies": {
+    "@mdi/font": "^7.0.0",
+    "vue": "^3.3.0",
+    "vuetify": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@mdi/font": {
+      "optional": true
+    },
+    "vuetify": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "@mdi/font": "^7.1.96",
-    "rfdc": "^1.3.0"
+    "rfdc": "^1.4.1"
   },
   "devDependencies": {
-    "@babel/types": "^7.20.7",
-    "@types/node": "^18.11.18",
-    "@vitejs/plugin-vue": "^4.0.0",
-    "@volar/vue-language-plugin-pug": "^1.0.24",
-    "@vue/tsconfig": "^0.1.3",
-    "pug": "^3.0.2",
-    "sass": "^1.57.1",
-    "shx": "^0.3.4",
-    "typescript": "^4.9.4",
-    "vite": "^4.4.9",
-    "vue": "^3.3.4",
-    "vue-tsc": "^1.8.8"
-  }
+    "@babel/types": "^7.29.0",
+    "@types/node": "^25.2.0",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "@volar/vue-language-plugin-pug": "^1.6.5",
+    "@vue/language-plugin-pug": "^3.2.4",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.8.1",
+    "happy-dom": "^20.5.0",
+    "pug": "^3.0.3",
+    "sass": "^1.97.3",
+    "shx": "^0.4.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18",
+    "vue": "^3.5.27",
+    "vue-tsc": "^3.2.4",
+    "vuetify": "^3.11.8"
+  },
+  "packageManager": "yarn@4.12.0"
 }

@@ -1,20 +1,71 @@
-<script setup lang="ts" generic="T extends Treenode<any>">
+<script setup lang="ts" generic="U, T extends BaseUpdatableTreenode<U>">
+import type { TreeEvents, TreeProps } from "./tree";
+import type { BaseTreenode, BaseUpdatableTreenode, TreenodeEventHandlers } from "./treenode";
+import { BaseEditableTreenode, findNodeById } from "./treenode";
+
 // view
-import type { TreeEvents } from "./tree";
 import treenode from "./treenode.vue";
-import type { Treenode, TreenodeEventHandlers, Mutable } from "./treenode";
-import { findNodeById } from "./treenode";
+
 import { nextTick, reactive, useSlots, watch } from "vue";
-import "@mdi/font/css/materialdesignicons.css";
-import rdfc from "rfdc";
+// Note: @mdi/font CSS should be imported by the consuming application
+// import "@mdi/font/css/materialdesignicons.css";
+
+class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
+    readonly id: Readonly<string>;
+    readonly content: Readonly<U>;
+    name: string;
+    styleClass: object | null;
+    subtrees: this[];
+    isDraggable: boolean;
+    isFolding: boolean|undefined;
+    isEditing?: boolean;
+    isHovering?: boolean;
+
+    constructor(node: X) {
+        super();
+        this.content = node.content;
+        this.id = node.id;
+        this.name = node.name;
+        this.styleClass = JSON.parse(JSON.stringify(node.styleClass));
+        this.subtrees = node.subtrees.map(x => new (this.constructor as any)(x));
+        this.isDraggable = node.isDraggable;
+        this.isFolding = node.isFolding;
+    }
+
+    onToggleEditing(id: string, isEditing: boolean): this | null {
+        const _node = findNodeById<U, this>(id, this);
+        if (_node === null) return null;
+        _node.isEditing = isEditing;
+        return _node;
+    }
+
+    onToggleHovering(id: string, isHovering: boolean) {
+        const _node = findNodeById<U, this>(id, this);
+        if (_node === null) return;
+        _node.isHovering = isHovering;
+    }
+}
 
 // custom directive for autofocus
 const vFocus = {
     mounted: (el: HTMLElement) => el.focus()
 };
 
+/**
+ * 何故かエラーなる
+ * 
+ * [plugin:vite:vue] [@vue/compiler-sfc] Unresolvable type reference or unsupported built-in utility type
+ * 
+ * /Users/yusuke/Workspace/vue3-tree/src/tree.vue
+ * 16 |  };
+ * 17 |  
+ * 18 |  const props = defineProps<TreeProps<U, T>>();
+ *    |                            ^^^^^^^^^^^^^^^
+ */
+// const props = defineProps<TreeProps<U, T>>();
 const props = defineProps<{
-    node : T
+    node: T;
+    version: number;
 }>();
 
 const slots = useSlots();
@@ -22,24 +73,7 @@ const slots = useSlots();
 // @note: stateを一箇所に集めないと処理上の様々なな判断が困難なため、stateの保持および処理はRootコンポーネント（tree）で行い、
 //        子ノード（treenode）ではイベントを発火させるだけとする。記述を簡潔にするためにコンポーネントを分けて実装する。
 
-const emit = defineEmits<TreeEvents<T>>();
-
-const _deepCopy = rdfc();
-const deepCopy = (node: T): T => {
-    const _recursive = (node: T): T => {
-        const tmp = {
-            id: node.id
-            , name: node.name
-            , styleClass: node.styleClass
-            , content: node.content
-            , subtrees: node.subtrees.map(n => _recursive(n))
-            , isDraggable: node.isDraggable
-            , isFolding: node.isFolding
-        } as T;
-        return _deepCopy(tmp);
-    };
-    return _recursive(node);
-};
+const emit = defineEmits<TreeEvents<U, InnerTreenode<T>>>();
 
 /**
  * targetUl が ofElem 自身かその子孫の場合 true を返します。
@@ -84,57 +118,58 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
 };
 
 const state = reactive<{
-    tree : T;
+    tree : InnerTreenode<T>;
     isModified : boolean;
     dragging : {
         elem : HTMLElement;
-        parent : T;
-        node : T;
+        parent : InnerTreenode<T>;
+        node : InnerTreenode<T>;
         mirage : HTMLElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
         id : string;
-        node : T;
+        node : InnerTreenode<T>;
         siblings : [HTMLElement | null, HTMLElement | null] | null;
     } | null;
     temporarilyOpen : {
-        node : T;
+        node : InnerTreenode<T>;
         timerId : number;
     } | null;
-    reserve: T | null;
+    reserve: InnerTreenode<InnerTreenode<T>> | null;
 }>({
-    tree: deepCopy(props.node)
+    tree: new InnerTreenode(props.node)
     , isModified: false
     , dragging: null
     , draggingOn: null
     , temporarilyOpen: null
     , reserve : null
 }) as { // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
-    tree : T; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
+    tree : InnerTreenode<T>; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
     isModified : boolean;
     dragging : {
         elem : HTMLElement;
-        parent : T;
-        node : T;
+        parent : InnerTreenode<T>;
+        node : InnerTreenode<T>;
         mirage : HTMLElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
         id : string;
-        node : T;
+        node : InnerTreenode<T>;
         siblings : [HTMLElement | null, HTMLElement | null] | null;
     } | null;
     temporarilyOpen : {
-        node : T;
+        node : InnerTreenode<T>;
         timerId : number;
     } | null;
-    reserve: T | null;
+    reserve: InnerTreenode<InnerTreenode<T>> | null;
 };
 
-watch(() => props.node, (newVal: T) => {
+watch(() => props.version, (newVal: number) => {
+    console.log("version", newVal);
+    state.tree = new InnerTreenode(props.node);
     state.isModified = false;
-    state.tree = deepCopy(newVal);
 });
 
 /**
@@ -168,38 +203,39 @@ const onDragover = (e: MouseEvent) => {
     }
 };
 
-const endEditingClosureBuilder = (node: T): (shouldCommit: boolean, newValue?: T) => void => {
-    return (shouldCommit: boolean, newValue?: T) => {
-        const mutableNode = node as Mutable<T>;
-        mutableNode.isEditing = false;
-        if (shouldCommit && newValue) { // 更新あり
+const endEditingClosureBuilder = (node: InnerTreenode<T>): ((shouldCommit: boolean) => void) => {
+    return (shouldCommit: boolean = true) => {
+        node.isEditing = false;
+        if (state.reserve === null) return;
+        if (shouldCommit) { // 更新あり
             state.reserve = null;
             state.isModified = true;
-            emit("update-node", newValue);
+            emit("update-name", node.id, node.name);
         } else { // 更新なし
-            if (state.reserve === null) return;
-            (Object.keys(state.reserve) as (keyof T)[]).forEach(key => {  
-                mutableNode[key] = (state.reserve as T)[key];
-            });
+            node.name = state.reserve.name;
             state.reserve = null;
         }
     };
 };
 
-const handlers: TreenodeEventHandlers<T> = {
+const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
+     * dragstgartで作成したmirageを、dragenterしたULの子要素として挿入します。
+     * 兄弟要素間での挿入位置はマウスポインタの位置によって決定します。
+     * 
      * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
      * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
      * @param e 
      * @param node イベントを発火させたnode
      */
-    "dragenter" : (e: DragEvent, node: T) => {
+    "dragenter" : (e: DragEvent, node: InnerTreenode<T>) => {
         const elem = e.target as HTMLElement
             , id = elem.dataset.id
             , y = e.clientY;
 
         // イベントを発火させたULへのdragenterのみ処理する
-        // イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれている
+        // （イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれているため
+        // 本丸以外は処理を終了させる）
         if (id !== node.id) return;
 
         if (id === undefined || state.dragging === null) return;
@@ -216,12 +252,7 @@ const handlers: TreenodeEventHandlers<T> = {
         elem.classList.add("drop-target");
         elem.addEventListener("dragover", onDragover);
 
-        state.draggingOn = {
-            elem
-            , id
-            , node
-            , siblings: null
-        };
+        state.draggingOn = { elem, id, node, siblings: null };
 
         const mirage = state.dragging.mirage;
         const siblings = getInsertingIntersiblings(elem, y);
@@ -229,33 +260,34 @@ const handlers: TreenodeEventHandlers<T> = {
         // 既にmirageがある場合は何もしない
         if (siblings.includes(mirage)) return;
 
+        // mirageがinsert済みな場合には親がある場合は引き剥がし
         if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
         if (siblings.includes(state.dragging.elem)) return;
 
+        // mirageを挿入
         elem.insertBefore(mirage, siblings[1]);
         state.draggingOn.siblings = siblings;
     }
     ,
     /**
-     * dragされた要素をdrag状態にします（スタイルを変えます）。
+     * dragされた要素をdrag状態にし（スタイルを変え）、クローンを作成してstateに保存します。
      * @param e 
      * @param parent 
      * @param node 
      */
-    "dragstart" : (e: MouseEvent, parent: T, node: T) => {
+    "dragstart" : (e: MouseEvent, parent: InnerTreenode<T>, node: InnerTreenode<T>) => {
         const elem = e.target as HTMLElement
             , mirage = elem.cloneNode(true) as HTMLElement;
         elem.classList.add("dragging");
         mirage.classList.add("mirage");
-    
-        state.dragging = {
-            elem
-            , parent
-            , node
-            , mirage
-        }
+        state.dragging = { elem, parent, node, mirage };
     }
-    , "dragend" : (e: MouseEvent) => {
+    , 
+    /**
+     * dragしていた要素を元の親から削除、新たな親の子として追加します。
+     * @param e 
+     */
+    "dragend" : (e: MouseEvent) => {
         const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
         elem.classList.remove("dragging");
 
@@ -267,7 +299,7 @@ const handlers: TreenodeEventHandlers<T> = {
         const exParent = elem.parentNode as HTMLElement;
         const newParent = state.draggingOn.elem;
 
-        console.log(state.draggingOn)
+        // console.log(state.draggingOn)
 
         if (exParent.dataset.id === undefined) return;
 
@@ -280,10 +312,9 @@ const handlers: TreenodeEventHandlers<T> = {
 
         // 元親から削除
         exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
-        // 新親に追加
+        // 新たな親に追加
         state.draggingOn.node.subtrees.splice(index, 0, node);
         state.draggingOn.node.isFolding = false;
-
         state.isModified = true;
 
         // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
@@ -295,17 +326,13 @@ const handlers: TreenodeEventHandlers<T> = {
                 newParent.removeEventListener("dragover", onDragover);
             });
 
-        emit("arrange", node
-            , { id: exParent.dataset.id, node: exPrarentNode }
-            , { id: state.draggingOn.id, node: state.draggingOn.node }
-            , index
-        );
+        emit("rearrange", node.id, exParent.dataset.id, state.draggingOn.id, index);
 
         state.dragging = null;
         state.draggingOn = null;
     }
-    , "dragenter-temporarily-open" : (e: DragEvent, node: T) => {
-        console.log("onDragenterTemporarilyOpen", node);
+    , "dragenter-temporarily-open" : (e: DragEvent, node: InnerTreenode<T>) => {
+        // console.log("onDragenterTemporarilyOpen", node);
         if (!node.isFolding) return; // 既に展開されている場合は何もしない
         if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
         if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
@@ -327,7 +354,7 @@ const handlers: TreenodeEventHandlers<T> = {
      * @param e 
      * @param node 
      */
-    "mouse-leave" : (e: MouseEvent, node: T) => {
+    "mouse-leave" : (e: MouseEvent, node: InnerTreenode<T>) => {
         if (state.temporarilyOpen) {
             if (state.temporarilyOpen.node.isFolding) { // まだ開かれていなかった場合はキャンセル
                 clearTimeout(state.temporarilyOpen.timerId);
@@ -336,35 +363,30 @@ const handlers: TreenodeEventHandlers<T> = {
         }
     }
     , "toggle-folding" : (e: MouseEvent, id: string) => {
-        const _node = findNodeById<T>(id, state.tree);
-        if (_node === null) return;
-        _node.isFolding = !_node.isFolding;
+        state.tree.onToggleFolding(id);
         emit("toggle-folding", id);
     }
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => {
-        const _node = findNodeById<T>(id, state.tree);
-        if (_node === null) return;
-        const mutableNode = _node as Mutable<any>;
-        mutableNode.isEditing = isEditing;
+        const _node = state.tree.onToggleEditing(id, isEditing);
+        if (_node === null) return null;
+
         emit("toggle-editing", id, isEditing);
+        
         if (isEditing) {
-            state.reserve = deepCopy(_node);
+            state.reserve = new InnerTreenode<InnerTreenode<T>>(_node);
         } else { // ここは slot を使わないときしか来ないので、name での判断でOK
             if (state.reserve === null) return;
-            if (state.reserve.name === _node.name) { // 更新なし
-                state.reserve = null;
-            } else { // 更新あり
+            if (state.reserve.name !== _node.name) { // 更新あり
                 state.reserve = null;
                 state.isModified = true;
-                emit("update-node", _node);
+                emit("update-name", _node.id, _node.name);
+            } else { // 更新なし
+                state.reserve = null;
             }
         }
     }
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => {
-        const _node = findNodeById<T>(id, state.tree);
-        if (_node === null) return;
-        const mutableNode = _node as Mutable<any>;
-        mutableNode.isHovering = isHovering;
+        state.tree.onToggleHovering(id, isHovering);
     }
 };
 
@@ -389,7 +411,7 @@ ul.tree
         :depth="0", 
         :isHovering="state.tree.isHovering===true", 
         :isEditing="state.tree.isEditing===true",
-        :endEditing="endEditingClosureBuilder(state.tree)"
+        :endEditing="(shouldCommit: boolean) => (endEditingClosureBuilder(state.tree))(shouldCommit)"
       )
       span(v-if="slots.default === undefined && !state.tree.isEditing") {{ state.tree.name + '(' + state.tree.id + ')' }}
       input(
@@ -432,7 +454,7 @@ ul.tree
             :depth="1", 
             :isHovering="childnode.isHovering===true", 
             :isEditing="childnode.isEditing===true",
-            :endEditing="endEditingClosureBuilder(childnode)"
+            :endEditing="(shouldCommit) => (endEditingClosureBuilder(childnode))(shouldCommit)"
           )
           span(v-if="slots.default === undefined && !childnode.isEditing") {{ childnode.name + '(' + childnode.id + ')' }}
           input(
