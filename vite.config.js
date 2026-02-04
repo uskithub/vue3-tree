@@ -1,27 +1,44 @@
 /// <reference types="vitest" />
 
-"use strict";
-const { defineConfig } = require("vite");
+import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import * as path from "path";
+import { fileURLToPath } from "url";
 
-module.exports = defineConfig({
-    plugins: [ vue({ style: { filename: "style.css" } })],
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+    plugins: [vue()],
     build: {
         outDir: "./dist",
         lib: {
             entry: path.resolve(__dirname, "src/index.ts"),
-            name: "vue3-tree",
-            fileName: (format) => `vue3-tree.${format}.js`
+            name: "Vue3Tree",
+            fileName: (format) => `vue3-tree.${format}.js`,
         },
         rollupOptions: {
-            // Vue is provided by the parent project, don't compile Vue source-code inside our library.
-            external: ["vue"],
-            output: { globals: { vue: "Vue" } },
+            // External dependencies - these should be provided by the consuming application
+            external: ["vue", "vuetify"],
+            output: {
+                globals: {
+                    vue: "Vue",
+                    vuetify: "Vuetify",
+                },
+                // Use named exports for better tree-shaking
+                exports: "named",
+                // Ensure CSS is extracted to a separate file
+                assetFileNames: (assetInfo) => {
+                    if (assetInfo.name === "style.css") return "style.css";
+                    return assetInfo.name ?? "assets/[name][extname]";
+                },
+            },
         },
+        // Generate sourcemaps for easier debugging
+        sourcemap: true,
+        // Minify for production
+        minify: "esbuild",
     },
-    test : {
-        environment: "happy-dom"
-    }
+    test: {
+        environment: "happy-dom",
+    },
 });
-//# sourceMappingURL=vite.config.js.map

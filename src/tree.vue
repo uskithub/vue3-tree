@@ -7,7 +7,8 @@ import { BaseEditableTreenode, findNodeById } from "./treenode";
 import treenode from "./treenode.vue";
 
 import { nextTick, reactive, useSlots, watch } from "vue";
-import "@mdi/font/css/materialdesignicons.css";
+// Note: @mdi/font CSS should be imported by the consuming application
+// import "@mdi/font/css/materialdesignicons.css";
 
 class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
     readonly id: Readonly<string>;
