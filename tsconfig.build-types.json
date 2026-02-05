@@ -4,11 +4,14 @@
     "include": ["src/**/*", "src/**/*.vue"],
     "compilerOptions": {
         "composite": true,
+        "noEmit": false,
+        "emitDeclarationOnly": true,
         "esModuleInterop": true,
         "declaration": true,
         "declarationMap": true,
         "skipLibCheck": true,
         "baseUrl": ".",
+        "rootDir": "./src",
         "paths": {
             "@/*": ["./src/*"]
         }

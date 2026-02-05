@@ -41,7 +41,7 @@ export interface Vue3TreePluginOptions {
  * app.mount('#app')
  * ```
  */
-export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin {
+export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin<[]> {
   const { components = {} } = options;
   const treeName = components.tree ?? "tree";
   const treenodeName = components.treenode ?? "treenode";
@@ -68,7 +68,7 @@ export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin {
  * app.mount('#app')
  * ```
  */
-export const Vue3TreePlugin: Plugin = {
+export const Vue3TreePlugin: Plugin<[]> = {
   install(app: App) {
     app.component("tree", VTreeComponent);
     app.component("treenode", VTreenodeComponent);

@@ -4,18 +4,18 @@
   "description": "A tree component for Vue 3 and Vuetify 3 with drag and drop support",
   "main": "dist/vue3-tree.umd.js",
   "module": "dist/vue3-tree.es.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist"
   ],
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/types/src/index.d.ts",
+        "types": "./dist/types/index.d.ts",
         "default": "./dist/vue3-tree.es.js"
       },
       "require": {
-        "types": "./dist/types/src/index.d.ts",
+        "types": "./dist/types/index.d.ts",
         "default": "./dist/vue3-tree.umd.js"
       }
     },
