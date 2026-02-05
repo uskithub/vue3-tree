@@ -1,5 +1,6 @@
 /**
- * TreenodeEventHandlers から TreenodeEvents を自動生するためDefineEventsを作ったが、コンパイルが通らない。 * @see: https://github.com/vuejs/core/issues/8286
+ * TreenodeEventHandlers から TreenodeEvents を自動生成するため DefineEvents を作ったが、コンパイルが通らない。 
+ * @see: https://github.com/vuejs/core/issues/8286
  * 
  * [vite:vue] [@vue/compiler-sfc] Failed to resolve index type into finite keys
  * 
@@ -85,7 +86,7 @@ export type TreenodeEventHandlers<T> = {
     "hover" : (event: MouseEvent, id: string, isHovering: boolean) => void;
 };
 
-// export type TreenodeEvents<T> = DefineEvents<TreenodeEventHandlers<T>>
+/* export type TreenodeEvents<T> = DefineEvents<TreenodeEventHandlers<T>> */
 export type TreenodeEvents<T> = {
     "dragenter" : [event: DragEvent, node: T];
     "dragstart" : [event: DragEvent, parent: T, node: T];
