@@ -261,13 +261,13 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 
         if (state.draggingOn) {
             state.draggingOn.elem.classList.remove("drop-target");
-            // document.body.classList.remove("out-of-scope");
+            document.body.classList.remove("out-of-scope");
             state.draggingOn.elem.removeEventListener("dragover", onDragover);
             state.draggingOn = null;
         }
 
         elem.classList.add("drop-target");
-        // document.body.classList.add("out-of-scope");
+        document.body.classList.add("out-of-scope");
         elem.addEventListener("dragover", onDragover);
 
         state.draggingOn = { elem, id, node, siblings: null };
@@ -371,6 +371,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             anim.onfinish = () => {
                 ghost.remove();
                 overlay.remove();
+                document.body.classList.remove("out-of-scope");
                 state.dragging = null;
             };
         } else {
@@ -402,8 +403,8 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                         .then(() => {
                             if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
             
+                            document.body.classList.remove("out-of-scope");
                             newParent.classList.remove("drop-target");
-                            // document.body.classList.remove("out-of-scope");
                             newParent.removeEventListener("dragover", onDragover);
                         });
             
