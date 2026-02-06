@@ -225,8 +225,7 @@ const inlineComputedStyles = (src: HTMLElement, dst: HTMLElement) => {
   const cs = getComputedStyle(src)
 
   // CSSStyleDeclaration は配列ライクにプロパティ名を列挙できます
-  for (let i = 0; i < cs.length; i++) {
-    const prop = cs[i]
+  for (let prop of cs) {
     dst.style.setProperty(prop, cs.getPropertyValue(prop), cs.getPropertyPriority(prop))
   }
 
