@@ -6,7 +6,7 @@ import { BaseEditableTreenode, findNodeById } from "./treenode";
 // view
 import treenode from "./treenode.vue";
 
-import { nextTick, reactive, useSlots, watch } from "vue";
+import { computed, nextTick, reactive, useSlots, watch } from "vue";
 // Note: @mdi/font CSS should be imported by the consuming application
 // import "@mdi/font/css/materialdesignicons.css";
 
@@ -117,34 +117,7 @@ const getInsertingIntersiblings = (parent: HTMLElement, y: number): [HTMLElement
     return [parent.children[len - 1] as HTMLElement, null];
 };
 
-const state = reactive<{
-    tree : InnerTreenode<T>;
-    isModified : boolean;
-    dragging : {
-        elem : HTMLElement;
-        parent : InnerTreenode<T>;
-        node : InnerTreenode<T>;
-        mirage : HTMLElement;
-    } | null;
-    draggingOn : {
-        elem : HTMLElement;
-        id : string;
-        node : InnerTreenode<T>;
-        siblings : [HTMLElement | null, HTMLElement | null] | null;
-    } | null;
-    temporarilyOpen : {
-        node : InnerTreenode<T>;
-        timerId : number;
-    } | null;
-    reserve: InnerTreenode<InnerTreenode<T>> | null;
-}>({
-    tree: new InnerTreenode(props.node)
-    , isModified: false
-    , dragging: null
-    , draggingOn: null
-    , temporarilyOpen: null
-    , reserve : null
-}) as { // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
+type State = {
     tree : InnerTreenode<T>; // @see: https://v3.ja.vuejs.org/api/refs-api.html#ref, https://am-yu.net/2022/11/13/vue3_ref_generics/s
     isModified : boolean;
     dragging : {
@@ -152,6 +125,11 @@ const state = reactive<{
         parent : InnerTreenode<T>;
         node : InnerTreenode<T>;
         mirage : HTMLElement;
+        rect: DOMRect;
+        offset : {
+            x : number;
+            y : number;
+        }
     } | null;
     draggingOn : {
         elem : HTMLElement;
@@ -164,7 +142,16 @@ const state = reactive<{
         timerId : number;
     } | null;
     reserve: InnerTreenode<InnerTreenode<T>> | null;
-};
+}
+
+const state = reactive<State>({
+    tree: new InnerTreenode(props.node)
+    , isModified: false
+    , dragging: null
+    , draggingOn: null
+    , temporarilyOpen: null
+    , reserve : null
+}) as State; // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
 
 watch(() => props.version, (newVal: number) => {
     console.log("version", newVal);
@@ -173,7 +160,7 @@ watch(() => props.version, (newVal: number) => {
 });
 
 /**
- * dragしている要素がホバーしているsiblingsが変わった場合にmirageを移動させstateのsiblingsを更新します。
+ * drag している要素がホバーしている siblings が変わった場合に mirage を移動させ state の siblings を更新します。
  * @param e 
  */
 const onDragover = (e: MouseEvent) => {
@@ -218,6 +205,35 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): ((shouldCommit: boole
     };
 };
 
+/** computed style を el -> clone にコピー（子孫も） */
+function inlineComputedStylesDeep(src: Element, dst: Element) {
+  inlineComputedStyles(src as HTMLElement, dst as HTMLElement)
+
+  const srcChildren = Array.from(src.children)
+  const dstChildren = Array.from(dst.children)
+
+  for (let i = 0; i < srcChildren.length; i++) {
+    const s = srcChildren[i]
+    const d = dstChildren[i]
+    if (!s || !d) continue
+    inlineComputedStylesDeep(s, d)
+  }
+}
+
+/** src の getComputedStyle を dst.style に全部設定する */
+function inlineComputedStyles(src: HTMLElement, dst: HTMLElement) {
+  const cs = getComputedStyle(src)
+
+  // CSSStyleDeclaration は配列ライクにプロパティ名を列挙できます
+  for (let i = 0; i < cs.length; i++) {
+    const prop = cs[i]
+    dst.style.setProperty(prop, cs.getPropertyValue(prop), cs.getPropertyPriority(prop))
+  }
+
+  // よくあるズレ防止：box-sizing を確実に
+  dst.style.boxSizing = cs.boxSizing
+}
+
 const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
      * dragstgartで作成したmirageを、dragenterしたULの子要素として挿入します。
@@ -245,11 +261,13 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 
         if (state.draggingOn) {
             state.draggingOn.elem.classList.remove("drop-target");
+            // document.body.classList.remove("out-of-scope");
             state.draggingOn.elem.removeEventListener("dragover", onDragover);
             state.draggingOn = null;
         }
 
         elem.classList.add("drop-target");
+        // document.body.classList.add("out-of-scope");
         elem.addEventListener("dragover", onDragover);
 
         state.draggingOn = { elem, id, node, siblings: null };
@@ -280,7 +298,13 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             , mirage = elem.cloneNode(true) as HTMLElement;
         elem.classList.add("dragging");
         mirage.classList.add("mirage");
-        state.dragging = { elem, parent, node, mirage };
+
+        const rect = elem.getBoundingClientRect();
+        const offset = { 
+          x : rect.left - e.clientX,
+          y : rect.top - e.clientY
+        };
+        state.dragging = { elem, parent, node, mirage, rect, offset };
     }
     , 
     /**
@@ -288,48 +312,112 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
      * @param e 
      */
     "dragend" : (e: MouseEvent) => {
+        console.log("onDragend！！");
         const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
         elem.classList.remove("dragging");
 
-        if (state.dragging === null || state.draggingOn === null) return;
+        if (state.dragging === null) return;
+
+        const rect = state.dragging.rect;
+        const left = e.clientX + state.dragging.offset.x;
+        const top = e.clientY + state.dragging.offset.y;
+        // 見た目コピー
+        const ghost = elem.cloneNode(true) as HTMLElement;
+
+        // 2) computed style をインラインに焼き付け（子孫も）
+        inlineComputedStylesDeep(elem, ghost)
+
+        // 3) overlay コンテナ（fixedで絶対位置に置く）
+        const overlay = document.createElement("div")
+        overlay.style.position = "fixed"
+        overlay.style.left = `${left}px`
+        overlay.style.top = `${top}px`
+        overlay.style.width = `${rect.width}px`
+        overlay.style.height = `${rect.height}px`
+        overlay.style.zIndex = "9999"
+        overlay.style.pointerEvents = "none" // 操作を邪魔しない
+        overlay.style.margin = "0"
+        overlay.style.padding = "0"
+        // overlay の中で clone を原点配置
+        ghost.style.position = "absolute"
+        ghost.style.left = "0"
+        ghost.style.top = "0"
+        // margin は overlay 方式だとズレ要因になりやすいので潰す（必要なら外す）
+        ghost.style.margin = "0"
+        
+        overlay.appendChild(ghost)
+        document.body.appendChild(overlay)
 
         const node = state.dragging.node;
         const exPrarentNode = state.dragging.parent;
         const mirage = state.dragging.mirage;
         const exParent = elem.parentNode as HTMLElement;
-        const newParent = state.draggingOn.elem;
-
-        // console.log(state.draggingOn)
 
         if (exParent.dataset.id === undefined) return;
+        const exParentId = exParent.dataset.id;
 
-        let index = 0;
-        for (let i = 0, len = newParent.children.length; i < len; i++) {
-            const child = newParent.children[i];
-            if (child === mirage) break;
-            if (child !== elem) index++;
-        }
-
-        // 元親から削除
-        exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
-        // 新たな親に追加
-        state.draggingOn.node.subtrees.splice(index, 0, node);
-        state.draggingOn.node.isFolding = false;
-        state.isModified = true;
-
-        // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
-        nextTick()
-            .then(() => {
-                if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-
-                newParent.classList.remove("drop-target");
-                newParent.removeEventListener("dragover", onDragover);
-            });
-
-        emit("rearrange", node.id, exParent.dataset.id, state.draggingOn.id, index);
-
-        state.dragging = null;
-        state.draggingOn = null;
+        // アニメーション
+        const to = mirage.parentNode ? mirage.getBoundingClientRect() : rect;
+        const dx = to.left - left;
+        const dy = to.top - top;
+        
+        // アニメーションが始まらない場合対策
+        // requestAnimationFrame(() => {
+            const anim = overlay.animate([
+                { transform: "translate(0px, 0px)", opacity: 1 },
+                { transform: `translate(${dx}px, ${dy}px)`, opacity: 1 }
+              ],
+              { duration: 300, easing: "cubic-bezier(0.5, 0.8, 0.5, 1)", fill: "forwards" }
+            );
+    
+            if (state.draggingOn === null) {
+                anim.onfinish = () => {
+                    ghost.remove();
+                    overlay.remove();
+                    state.dragging = null;
+                };
+            } else {
+                const newParent = state.draggingOn.elem;
+                const newParentNode = state.draggingOn.node;
+                const newParentId = state.draggingOn.id;
+                anim.onfinish = () => {
+                    ghost.remove();
+                    overlay.remove();
+    
+                    let index = 0;
+                    for (let i = 0, len = newParent.children.length; i < len; i++) {
+                        const child = newParent.children[i];
+                        if (child === mirage) break;
+                        if (child !== elem) index++;
+                    }
+    
+                    const isMovingDown = rect.top - to.top < 0;
+                    setTimeout(() => {
+                        // 元親から削除
+                        exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
+                        // 新たな親に追加
+                        newParentNode.subtrees.splice(index, 0, node);
+                        newParentNode.isFolding = false;
+                        state.isModified = true;
+                
+                        // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
+                        nextTick()
+                            .then(() => {
+                                if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+                
+                                newParent.classList.remove("drop-target");
+                                // document.body.classList.remove("out-of-scope");
+                                newParent.removeEventListener("dragover", onDragover);
+                            });
+                
+                        emit("rearrange", node.id, exParentId, newParentId, index);
+                
+                        state.dragging = null;
+                        state.draggingOn = null;
+                    }, isMovingDown ? 0.3 * 1000 : 0); // 元の位置より下の段に移動する場合、ゆっくり動かす
+                };
+            }
+        // });
     }
     , "dragenter-temporarily-open" : (e: DragEvent, node: InnerTreenode<T>) => {
         // console.log("onDragenterTemporarilyOpen", node);
@@ -393,7 +481,10 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 </script>
 
 <template lang="pug">
-ul.tree
+ul.tree(
+  @dragenter.capture.prevent
+  @dragover.capture.prevent
+)
   li(:data-id="state.tree.id")
     .tree-header(
       @dblclick.prevent="handlers['toggle-editing']($event, state.tree.id, true)"
@@ -490,6 +581,10 @@ ul.tree
 </template>
 
 <style lang="sass" scoped>
+
+:global(body.out-of-scope)
+  background-color: #888
+
 .tree
   list-style-type: none
   margin: 0
@@ -511,14 +606,19 @@ ul.tree
     min-height: 2.5em
     overflow: hidden
 
+    &:has(> ul.subtree.drop-target)
+      background-color: #fff
+
     &.dragging
       opacity: 0.5
+ 
     &.mirage
       opacity: 0.5
       color: #f00
 
     &.freeze
       background: #eee
+
     .tree-item
       min-height: 2.5em
       padding: 0.5em 0.5em 0 0em
@@ -536,6 +636,9 @@ ul.tree
 
       &.drop-target
         border: 3px dotted #888
+
+      li:has(> ul.subtree.drop-target)
+        background-color: #fff
 
     .subtree.modified:before
       content: "modification has not reflected."
