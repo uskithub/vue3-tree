@@ -1,21 +1,4 @@
-/**
- * TreenodeEventHandlers から TreenodeEvents を自動生成するため DefineEvents を作ったが、コンパイルが通らない。 
- * @see: https://github.com/vuejs/core/issues/8286
- * 
- * [vite:vue] [@vue/compiler-sfc] Failed to resolve index type into finite keys
- * 
- * /Users/yusuke/Workspaces/vue3-tree/src/treenode.ts
- * 1  |  export type DefineEvents<T> = {
- * 2  |      [U in keyof T] : T[U] extends  (...args: infer A) => void
- *    |            ^^^^^^^
- * 3  |          ? A
- * 4  |          : never;
- */ 
-// export type DefineEvents<T> = {
-//     [U in keyof T] : T[U] extends (...args: infer A) => void
-//         ? A
-//         : never;
-// };
+import type { EventHandlersFromEvents } from "./tree";
 
 // Tree/Treeview で使う
 export interface TreenodeCore<T> {
@@ -75,18 +58,6 @@ export abstract class BaseEditableTreenode<T> extends BaseTreenode<T> implements
     abstract isHovering?: boolean;
 }
 
-export type TreenodeEventHandlers<T> = {
-    "dragenter" : (event: DragEvent, node: T) => void;
-    "dragstart" : (event: DragEvent, parent: T, node: T) => void;
-    "dragend" : (event: DragEvent, node: T) => void;
-    "dragenter-temporarily-open" : (event: DragEvent, node: T) => void;
-    "mouse-leave" : (event: MouseEvent, node: T) => void;
-    "toggle-folding" : (event: MouseEvent, id: string) => void;
-    "toggle-editing" : (event: MouseEvent, id: string, isEditing: boolean) => void;
-    "hover" : (event: MouseEvent, id: string, isHovering: boolean) => void;
-};
-
-/* export type TreenodeEvents<T> = DefineEvents<TreenodeEventHandlers<T>> */
 export type TreenodeEvents<T> = {
     "dragenter" : [event: DragEvent, node: T];
     "dragstart" : [event: DragEvent, parent: T, node: T];
@@ -97,6 +68,8 @@ export type TreenodeEvents<T> = {
     "toggle-editing" : [event: MouseEvent, id: string, isEditing: boolean];
     "hover" : [event: MouseEvent, id: string, isHovering: boolean];
 };
+
+export type TreenodeEventHandlers<T> = EventHandlersFromEvents<TreenodeEvents<T>>;
 
 export type Mutable<Type> = {
     -readonly [Property in keyof Type]: Type[Property];
