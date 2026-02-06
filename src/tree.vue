@@ -129,7 +129,8 @@ type State = {
         offset : {
             x : number;
             y : number;
-        }
+        },
+        overlay : HTMLDivElement;
     } | null;
     draggingOn : {
         elem : HTMLElement;
@@ -260,13 +261,12 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 
         if (state.draggingOn) {
             state.draggingOn.elem.classList.remove("drop-target");
-            document.body.classList.remove("out-of-scope");
             state.draggingOn.elem.removeEventListener("dragover", onDragover);
             state.draggingOn = null;
         }
 
         elem.classList.add("drop-target");
-        document.body.classList.add("out-of-scope");
+        state.dragging.overlay.classList.add("out-of-scope");
         elem.addEventListener("dragover", onDragover);
 
         state.draggingOn = { elem, id, node, siblings: null };
@@ -305,7 +305,9 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
           x : rect.left - e.clientX,
           y : rect.top - e.clientY
         };
-        state.dragging = { elem, parent, node, mirage, rect, offset };
+        const overlay = document.createElement("div")
+        document.body.appendChild(overlay)
+        state.dragging = { elem, parent, node, mirage, rect, offset, overlay };
     }
     , 
     /**
@@ -319,23 +321,23 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 
         if (state.dragging === null) return;
 
-        const rect = state.dragging.rect;
-        const left = e.clientX + state.dragging.offset.x;
-        const top = e.clientY + state.dragging.offset.y;
+        const { rect, overlay, offset } = state.dragging;
+        const left = e.clientX + offset.x;
+        const top = e.clientY + offset.y;
 
         const ghost = elem.cloneNode(true) as HTMLElement;
         inlineComputedStylesDeep(elem, ghost)
 
-        const overlay = document.createElement("div")
-        overlay.style.position = "fixed"
-        overlay.style.left = `${left}px`
-        overlay.style.top = `${top}px`
-        overlay.style.width = `${rect.width}px`
-        overlay.style.height = `${rect.height}px`
-        overlay.style.zIndex = "9999"
-        overlay.style.pointerEvents = "none" // 操作を邪魔しない
-        overlay.style.margin = "0"
-        overlay.style.padding = "0"
+        const focusFrame = document.createElement("div")
+        focusFrame.style.position = "fixed"
+        focusFrame.style.left = `${left}px`
+        focusFrame.style.top = `${top}px`
+        focusFrame.style.width = `${rect.width}px`
+        focusFrame.style.height = `${rect.height}px`
+        focusFrame.style.zIndex = "9999"
+        focusFrame.style.pointerEvents = "none" // 操作を邪魔しない
+        focusFrame.style.margin = "0"
+        focusFrame.style.padding = "0"
         // overlay の中で clone を原点配置
         ghost.style.position = "absolute"
         ghost.style.left = "0"
@@ -343,9 +345,8 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         // margin は overlay 方式だとズレ要因になりやすいので潰す（必要なら外す）
         ghost.style.margin = "0"
         
-        overlay.appendChild(ghost)
-        document.body.appendChild(overlay)
-
+        focusFrame.appendChild(ghost)
+        document.body.appendChild(focusFrame)
         const node = state.dragging.node;
         const exPrarentNode = state.dragging.parent;
         const mirage = state.dragging.mirage;
@@ -359,7 +360,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         const dx = to.left - left;
         const dy = to.top - top;
     
-        const anim = overlay.animate([
+        const anim = focusFrame.animate([
             { transform: "translate(0px, 0px)", opacity: 1 },
             { transform: `translate(${dx}px, ${dy}px)`, opacity: 1 }
             ],
@@ -369,8 +370,9 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         if (state.draggingOn === null) {
             anim.onfinish = () => {
                 ghost.remove();
+                focusFrame.remove();
+                overlay.classList.remove("out-of-scope");
                 overlay.remove();
-                document.body.classList.remove("out-of-scope");
                 state.dragging = null;
             };
         } else {
@@ -379,8 +381,8 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             const newParentId = state.draggingOn.id;
             anim.onfinish = () => {
                 ghost.remove();
+                focusFrame.remove();
                 overlay.remove();
-
                 let index = 0;
                 for (let i = 0, len = newParent.children.length; i < len; i++) {
                     const child = newParent.children[i];
@@ -402,7 +404,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                         .then(() => {
                             if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
             
-                            document.body.classList.remove("out-of-scope");
+                            overlay.classList.remove("out-of-scope");
                             newParent.classList.remove("drop-target");
                             newParent.removeEventListener("dragover", onDragover);
                         });
@@ -577,9 +579,12 @@ ul.tree(
 </template>
 
 <style lang="sass" scoped>
-
-:global(body.out-of-scope)
-  background-color: #888
+:global(div.out-of-scope)
+  position: fixed
+  inset: 0
+  background: rgba(0, 0, 0, 0.3)
+  z-index: 10
+  pointer-events: none
 
 .tree
   list-style-type: none
@@ -604,6 +609,7 @@ ul.tree(
 
     &:has(> ul.subtree.drop-target)
       background-color: #fff
+      z-index: 100
 
     &.dragging
       opacity: 0.5
@@ -635,6 +641,7 @@ ul.tree(
 
       li:has(> ul.subtree.drop-target)
         background-color: #fff
+        z-index: 100
 
     .subtree.modified:before
       content: "modification has not reflected."
