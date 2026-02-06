@@ -26,7 +26,7 @@ class InnerTreenode<X extends BaseTreenode<U>> extends BaseEditableTreenode<U> {
         this.content = node.content;
         this.id = node.id;
         this.name = node.name;
-        this.styleClass = JSON.parse(JSON.stringify(node.styleClass));
+        this.styleClass = node.styleClass ? JSON.parse(JSON.stringify(node.styleClass)) : null;
         this.subtrees = node.subtrees.map(x => new (this.constructor as any)(x));
         this.isDraggable = node.isDraggable;
         this.isFolding = node.isFolding;
@@ -431,7 +431,7 @@ ul.tree
         :key="childnode.id", 
         :data-id="childnode.id", 
         :draggable="childnode.isDraggable"
-        :class="{ freeze : !childnode.isDraggable, ...childnode.styleClass }"
+        :class="[{ freeze : !childnode.isDraggable }, childnode.styleClass ]"
         @dragstart="handlers['dragstart']($event, state.tree, childnode)"
         @dragend="handlers['dragend']($event)"
       )

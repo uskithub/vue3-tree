@@ -25,7 +25,7 @@ class MyTreenode extends BaseUpdatableTreenode<MyContent> {
 
     get id(): string { return this._content.id; }
     get name(): string { return this._content.title; }
-    get styleClass(): object | null { return { [this._content.type]: true }; }
+    get styleClass(): object | null { return this._content.type ? { [this._content.type]: true } : null; }
     get content(): MyContent { return this._content; }
     get subtrees(): this[] { return this._subtrees; }
     get isDraggable(): boolean { return true; }
