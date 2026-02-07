@@ -29,25 +29,15 @@ export class MyTreenode extends BaseTreenode<MyContent> {
         this._content = newContent;
     }
 
-    findNodeById(id: string, node: MyContent = this._content): MyContent | null {
-        if (node.id === id) { return node; }
-
-        for (const child of node.children) {
-            const found = this.findNodeById(id, child);
-            if (found) { return found; }
-        }
-        return null;
-    }
-
     rearrange(targetId : string, from: string, to: string, index: number) {
-        const node = this.findNodeById(targetId);
-        const exParent = this.findNodeById(from);
-        const newParent = this.findNodeById(to);
-        if (node === null || exParent === null || newParent === null) return;
+        const target = this.findNodeById(targetId)?._content;
+        const exParent = this.findNodeById(from)?._content;
+        const newParent = this.findNodeById(to)?._content;
+        if (target === undefined || exParent === undefined || newParent === undefined) return;
         // 元親から削除
         exParent.children = exParent.children.filter((child: MyContent) => child.id !== targetId);
         // 新親に追加
-        newParent.children.splice(index, 0, node);
+        newParent.children.splice(index, 0, target);
         // newParent.isFolding = false;
         // サブツリーを再構築
         this._subtrees = this.content.children.map(c => new (this.constructor as any)(c));

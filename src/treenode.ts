@@ -8,7 +8,7 @@ export interface TreenodeCore<T> {
     styleClass: object | null;
     subtrees: this[];
     isDraggable: boolean;
-    isFolding: boolean|undefined;
+    isFolding: boolean | undefined;
 }
 
 interface NodeEditable {
@@ -29,6 +29,10 @@ export abstract class BaseTreenode<T> implements TreenodeCore<T> {
     abstract isDraggable: boolean;
     
     isFolding: boolean | undefined;
+
+    findNodeById(id: string): this | null {
+        return findNodeById<T, this>(id, this);
+    }
 
     onToggleFolding(id: string) {
         const node = findNodeById<T, this>(id, this);
