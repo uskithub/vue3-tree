@@ -1,6 +1,6 @@
 import type { EventHandlersFromEvents } from "./tree";
 
-// Tree/Treeview で使う
+// 内部（Tree/Treeview）で使う
 export interface TreenodeCore<T> {
     readonly id: Readonly<string>;
     readonly content: Readonly<T>;
@@ -47,12 +47,12 @@ export abstract class BaseTreenode<T> implements TreenodeCore<T> {
     }
 }
 
-// App.vue で使う
+// treeコンポーネントを利用する側で使う
 export abstract class BaseUpdatableTreenode<T> extends BaseTreenode<T> implements NodeUpdatable<T> {
     abstract update(newContent: T): void;
 }
 
-// Tree/Treeview で使う
+// 内部（Tree/Treeview）で使う
 export abstract class BaseEditableTreenode<T> extends BaseTreenode<T> implements NodeEditable {
     abstract isEditing?: boolean;
     abstract isHovering?: boolean;

@@ -16,4 +16,5 @@ export type TreeEvents<U, T extends BaseTreenode<U>> = {
     "update-name" : [id: T["id"], newValue: T["name"]];
 };
 
+// treeコンポーネントを利用する側で使う
 export type TreeEventHandlers<U, T extends BaseTreenode<U>> = EventHandlersFromEvents<TreeEvents<U, T>>;
