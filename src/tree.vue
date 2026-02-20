@@ -195,11 +195,11 @@ const endEditingClosureBuilder = (node: InnerTreenode<T>): ((shouldCommit: boole
     return (shouldCommit: boolean = true) => {
         node.isEditing = false;
         if (state.reserve === null) return;
-        if (shouldCommit) { // 更新あり
+        if (shouldCommit && state.reserve.name !== node.name) { // 更新可で変更あり
             state.reserve = null;
             state.isModified = true;
             emit("update-name", node.id, node.name);
-        } else { // 更新なし
+        } else { // 更新不可または変更なし
             node.name = state.reserve.name;
             state.reserve = null;
         }
