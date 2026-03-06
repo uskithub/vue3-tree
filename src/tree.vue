@@ -279,7 +279,13 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
 
         // mirageがinsert済みな場合には親がある場合は引き剥がし
         if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-        if (siblings.includes(state.dragging.elem)) return;
+        if (siblings.includes(state.dragging.elem)) {
+            // 元の場所に戻ってきた場合にはドロップターゲットを解除
+            state.draggingOn.elem.classList.remove("drop-target");
+            state.draggingOn.elem.removeEventListener("dragover", onDragover);
+            state.draggingOn = null;
+            return;
+        }
 
         // mirageを挿入
         elem.insertBefore(mirage, siblings[1]);
@@ -368,6 +374,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         );
 
         if (state.draggingOn === null) {
+            // ドロップ先がない状態の場合は元の位置に戻すだけ
             anim.onfinish = () => {
                 ghost.remove();
                 focusFrame.remove();
@@ -383,33 +390,33 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                 ghost.remove();
                 focusFrame.remove();
                 overlay.remove();
-                let index = 0;
+
+                let newIndex = 0;
                 for (let i = 0, len = newParent.children.length; i < len; i++) {
                     const child = newParent.children[i];
                     if (child === mirage) break;
-                    if (child !== elem) index++;
+                    if (child !== elem) newIndex++;
                 }
-
+                
                 const isMovingDown = rect.top - to.top < 0;
                 setTimeout(() => {
                     // 元親から削除
-                    exPrarentNode.subtrees = exPrarentNode.subtrees.filter((subtree) => subtree.id !== node.id);
+                    exPrarentNode.subtrees = exPrarentNode.subtrees.filter((child) => child.id !== node.id);
                     // 新たな親に追加
-                    newParentNode.subtrees.splice(index, 0, node);
+                    newParentNode.subtrees.splice(newIndex, 0, node);
                     newParentNode.isFolding = false;
                     state.isModified = true;
             
                     // emit先でエラーが起きた場合に、nextTickの処理が行われない場合があったので emitより前に書くこと
                     nextTick()
                         .then(() => {
-                            if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-            
+                            mirage.parentNode?.removeChild(mirage);
                             overlay.classList.remove("out-of-scope");
                             newParent.classList.remove("drop-target");
                             newParent.removeEventListener("dragover", onDragover);
                         });
             
-                    emit("rearrange", node.id, exParentId, newParentId, index);
+                    emit("rearrange", node.id, exParentId, newParentId, newIndex);
             
                     state.dragging = null;
                     state.draggingOn = null;
