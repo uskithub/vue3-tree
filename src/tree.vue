@@ -362,7 +362,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         const exParentId = exParent.dataset.id;
 
         // アニメーション
-        const to = mirage.parentNode ? mirage.getBoundingClientRect() : rect;
+        const to = mirage.parentNode ? mirage.getBoundingClientRect() : elem.getBoundingClientRect();
         const dx = to.left - left;
         const dy = to.top - top;
     
