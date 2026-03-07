@@ -6,7 +6,7 @@ import { BaseEditableTreenode, findNodeById } from "./treenode";
 // view
 import treenode from "./treenode.vue";
 
-import { computed, nextTick, reactive, useSlots, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, useSlots, watch } from "vue";
 // Note: @mdi/font CSS should be imported by the consuming application
 // import "@mdi/font/css/materialdesignicons.css";
 
@@ -314,6 +314,9 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
         const overlay = document.createElement("div")
         document.body.appendChild(overlay)
         state.dragging = { elem, parent, node, mirage, rect, offset, overlay };
+
+        // 領域外の dropend のデフォルトアニメーションをキャンセル
+        enableDocumentDragAnimationCanceller()
     }
     , 
     /**
@@ -381,6 +384,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                 overlay.classList.remove("out-of-scope");
                 overlay.remove();
                 state.dragging = null;
+                removeDocumentDragOver();
             };
         } else {
             const newParent = state.draggingOn.elem;
@@ -414,6 +418,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                             overlay.classList.remove("out-of-scope");
                             newParent.classList.remove("drop-target");
                             newParent.removeEventListener("dragover", onDragover);
+                            removeDocumentDragOver();
                         });
             
                     emit("rearrange", node.id, exParentId, newParentId, newIndex);
@@ -483,6 +488,29 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     }
 };
 
+/* 領域外のドロップに対してもデフォルトのアニメーションをキャンセルする */
+
+const onDocumentDragEnter = (e: DragEvent) => {
+    e.preventDefault();
+}
+
+const onDocumentDragOver = (e: DragEvent) => {
+    e.preventDefault();
+}
+
+const enableDocumentDragAnimationCanceller = () => {
+    document.addEventListener("dragenter", onDocumentDragEnter, { capture: true })
+    document.addEventListener("dragover", onDocumentDragOver, { capture: true })
+}
+
+const removeDocumentDragOver = () => {
+    document.removeEventListener("dragenter", onDocumentDragEnter, { capture: true })
+    document.removeEventListener("dragover", onDocumentDragOver, { capture: true })
+}
+
+onBeforeUnmount(() => {
+    removeDocumentDragOver()
+});
 </script>
 
 <template lang="pug">
