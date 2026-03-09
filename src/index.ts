@@ -5,9 +5,8 @@ import VTreenode from "./treenode.vue";
 import "./global.d.ts";
 
 // Types
-export type { TreeEvents, TreeEventHandlers, TreeProps } from "./tree";
-export type { TreenodeCore, TreenodeEventHandlers, TreenodeEvents } from "./treenode";
-export { findNodeById, BaseTreenode, BaseUpdatableTreenode, BaseEditableTreenode } from "./treenode";
+export type { TreeEventHandlers } from "./tree";
+export { findNodeById, BaseUpdatableTreenode as BaseTreenode } from "./treenode";
 
 // Components - export for direct import usage
 export { VTree, VTreenode };
