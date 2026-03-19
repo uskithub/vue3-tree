@@ -295,36 +295,44 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
      * @param node イベントを発火させたnode
      */
     "dragenter" : (e: DragEvent, node: InnerTreenode<T>) => {
-        const treeItem = e.currentTarget as HTMLElement
-            , li = treeItem.parentElement
-            , subtree = li?.querySelector(":scope > ul.subtree") as HTMLElement | null;
-  
-        // 自身の場合は何もしない
-        if (state.dragging && state.dragging.node.id === node.id) return;
+        const sourceElem = e.currentTarget as HTMLElement
 
-        if (!node.isFolding) {
-            // 既に開いているなら、直下の ul.subtree に対する処理を直接呼ぶ
-            if (subtree) {                
-                handleSubtreeDragEnter(subtree, e.clientY, node);
-            }
-        } else {
-            // 子要素がない場合は何もしない
-            if (node.subtrees.length < 1) return;
-            // 既に setTimeout 設定済の場合も何もしない
-            if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return;
-            state.temporarilyOpen = { 
-                node
-                , timerId: window.setTimeout(() => {
-                    console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
-                    if (state.temporarilyOpen) {
-                        state.temporarilyOpen.node.isFolding = false;
-                        state.temporarilyOpen = null;
-                        if (subtree) {
-                            handleSubtreeDragEnter(subtree, e.clientY, node);
+        if (
+            sourceElem.classList.contains("tree-header")
+            || sourceElem.classList.contains("tree-item")
+        ) {
+            const li = sourceElem.parentElement
+                , subtree = li?.querySelector(":scope > ul.subtree") as HTMLElement | null;
+            
+            // 自身の場合は何もしない
+            if (state.dragging && state.dragging.node.id === node.id) return;
+
+            if (!node.isFolding) {
+                // 既に開いているなら、直下の ul.subtree に対する処理を直接呼ぶ
+                if (subtree) {                
+                    handleSubtreeDragEnter(subtree, e.clientY, node);
+                }
+            } else {
+                // 子要素がない場合は何もしない
+                if (node.subtrees.length < 1) return;
+                // 既に setTimeout 設定済の場合も何もしない
+                if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return;
+                state.temporarilyOpen = { 
+                    node
+                    , timerId: window.setTimeout(() => {
+                        console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
+                        if (state.temporarilyOpen) {
+                            state.temporarilyOpen.node.isFolding = false;
+                            state.temporarilyOpen = null;
+                            if (subtree) {
+                                handleSubtreeDragEnter(subtree, e.clientY, node);
+                            }
                         }
-                    }
-                }, 800) 
-            };
+                    }, 800) 
+                };
+            }
+        } else if (sourceElem.classList.contains("subtree")) {
+            handleSubtreeDragEnter(sourceElem, e.clientY, node);
         }
     }
     ,
@@ -569,6 +577,7 @@ ul.tree(
       v-if="!state.tree.isFolding"
       :data-id="state.tree.id"
       :class="{ modified: state.isModified }"
+      @dragenter.prevent.stop="handlers['dragenter']($event, state.tree)"
     )
       li(
         v-for="childnode in state.tree.subtrees",
