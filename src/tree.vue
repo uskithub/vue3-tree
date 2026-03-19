@@ -515,6 +515,7 @@ onBeforeUnmount(() => {
 
 <template lang="pug">
 ul.tree(
+  :class="{ 'is-dragging': state.dragging !== null }"
   @dragenter.capture.prevent
   @dragover.capture.prevent
 )
@@ -656,10 +657,14 @@ ul.tree(
     &.freeze
       background: #eee
 
+    .tree-header
+      min-height: 2.5em
+      padding: 0.5em 0.5em 0 0em
+
     .tree-item
       min-height: 2.5em
       padding: 0.5em 0.5em 0 0em
-      
+
     .subtree
       list-style-type: none
       margin: 0 0 0 1em
@@ -681,4 +686,12 @@ ul.tree(
     .subtree.modified:before
       content: "modification has not reflected."
       color: #f00
+
+  &:not(.is-dragging)
+    :deep(li)
+      .tree-header:hover
+        background: rgba(var(--v-theme-on-surface), 0.08)
+
+      .tree-item:hover
+        background: rgba(var(--v-theme-on-surface), 0.08)
 </style>
