@@ -66,7 +66,6 @@ export type TreenodeEvents<T> = {
     "dragenter" : [event: DragEvent, node: T];
     "dragstart" : [event: DragEvent, parent: T, node: T];
     "dragend" : [event: DragEvent, node: T];
-    "dragenter-temporarily-open" : [event: DragEvent, node: T];
     "mouse-leave" : [event: MouseEvent, node: T];
     "toggle-folding" : [event: MouseEvent, id: string];
     "toggle-editing" : [event: MouseEvent, id: string, isEditing: boolean];

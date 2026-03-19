@@ -234,10 +234,60 @@ const inlineComputedStyles = (src: HTMLElement, dst: HTMLElement) => {
   dst.style.boxSizing = cs.boxSizing
 }
 
+const handleSubtreeDragEnter = (
+  elem: HTMLElement,
+  y: number,
+  node: InnerTreenode<T>
+) => {
+    const id = elem.dataset.id;
+
+    // イベントを発火させた UL への dragenter のみ処理する
+    // （イベントを発火させた node を拾うため、各 UL に dragenter を仕込んでいて何重にも dragenter が呼ばれているため
+    // 本丸以外は処理を終了させる）
+    if (id === undefined || id !== node.id) return;
+    if (state.dragging === null) return;
+
+    // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
+    if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
+
+    if (state.draggingOn) {
+        state.draggingOn.elem.classList.remove("drop-target");
+        state.draggingOn.elem.removeEventListener("dragover", onDragover);
+        state.draggingOn = null;
+    }
+
+    elem.classList.add("drop-target");
+    state.dragging.overlay.classList.add("out-of-scope");
+    elem.addEventListener("dragover", onDragover);
+
+    state.draggingOn = { elem, id, node, siblings: null };
+
+    const mirage = state.dragging.mirage;
+    const siblings = getInsertingIntersiblings(elem, y);
+
+    // 既にmirageがある場合は何もしない
+    if (siblings.includes(mirage)) return;
+
+    // mirageがinsert済みな場合には親がある場合は引き剥がし
+    if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+    if (siblings.includes(state.dragging.elem)) {
+        // 元の場所に戻ってきた場合にはドロップターゲットを解除
+        state.draggingOn.elem.classList.remove("drop-target");
+        state.draggingOn.elem.removeEventListener("dragover", onDragover);
+        state.draggingOn = null;
+        return;
+    }
+
+    // mirageを挿入
+    elem.insertBefore(mirage, siblings[1]);
+    state.draggingOn.siblings = siblings;
+}
+
 const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
      * dragstgartで作成したmirageを、dragenterしたULの子要素として挿入します。
      * 兄弟要素間での挿入位置はマウスポインタの位置によって決定します。
+     * foldingしているノードに対しては、一定時間ドラッグオーバーした場合に自動で展開します。
      * 
      * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
      * ※ イベントを発火させたnodeを拾うため、各ULにイベントが発火するようにしている
@@ -245,51 +295,37 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
      * @param node イベントを発火させたnode
      */
     "dragenter" : (e: DragEvent, node: InnerTreenode<T>) => {
-        const elem = e.target as HTMLElement
-            , id = elem.dataset.id
-            , y = e.clientY;
+        const treeItem = e.currentTarget as HTMLElement
+            , li = treeItem.parentElement
+            , subtree = li?.querySelector(":scope > ul.subtree") as HTMLElement | null;
+  
+        // 自身の場合は何もしない
+        if (state.dragging && state.dragging.node.id === node.id) return;
 
-        // イベントを発火させたULへのdragenterのみ処理する
-        // （イベントを発火させたnodeを拾うため、各ULにdragenterを仕込んでいて何重にもdragenterが呼ばれているため
-        // 本丸以外は処理を終了させる）
-        if (id !== node.id) return;
-
-        if (id === undefined || state.dragging === null) return;
-
-        // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
-        if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
-
-        if (state.draggingOn) {
-            state.draggingOn.elem.classList.remove("drop-target");
-            state.draggingOn.elem.removeEventListener("dragover", onDragover);
-            state.draggingOn = null;
+        if (!node.isFolding) {
+            // 既に開いているなら、直下の ul.subtree に対する処理を直接呼ぶ
+            if (subtree) {                
+                handleSubtreeDragEnter(subtree, e.clientY, node);
+            }
+        } else {
+            // 子要素がない場合は何もしない
+            if (node.subtrees.length < 1) return;
+            // 既に setTimeout 設定済の場合も何もしない
+            if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return;
+            state.temporarilyOpen = { 
+                node
+                , timerId: window.setTimeout(() => {
+                    console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
+                    if (state.temporarilyOpen) {
+                        state.temporarilyOpen.node.isFolding = false;
+                        state.temporarilyOpen = null;
+                        if (subtree) {
+                            handleSubtreeDragEnter(subtree, e.clientY, node);
+                        }
+                    }
+                }, 800) 
+            };
         }
-
-        elem.classList.add("drop-target");
-        state.dragging.overlay.classList.add("out-of-scope");
-        elem.addEventListener("dragover", onDragover);
-
-        state.draggingOn = { elem, id, node, siblings: null };
-
-        const mirage = state.dragging.mirage;
-        const siblings = getInsertingIntersiblings(elem, y);
-
-        // 既にmirageがある場合は何もしない
-        if (siblings.includes(mirage)) return;
-
-        // mirageがinsert済みな場合には親がある場合は引き剥がし
-        if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
-        if (siblings.includes(state.dragging.elem)) {
-            // 元の場所に戻ってきた場合にはドロップターゲットを解除
-            state.draggingOn.elem.classList.remove("drop-target");
-            state.draggingOn.elem.removeEventListener("dragover", onDragover);
-            state.draggingOn = null;
-            return;
-        }
-
-        // mirageを挿入
-        elem.insertBefore(mirage, siblings[1]);
-        state.draggingOn.siblings = siblings;
     }
     ,
     /**
@@ -429,23 +465,6 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             };
         }
     }
-    , "dragenter-temporarily-open" : (e: DragEvent, node: InnerTreenode<T>) => {
-        // console.log("onDragenterTemporarilyOpen", node);
-        if (!node.isFolding) return; // 既に展開されている場合は何もしない
-        if (state.dragging && state.dragging.node.id === node.id) return; // 自身の場合は何もしない
-        if (node.subtrees.length < 1) return; // 子要素がない場合は何もしない
-        if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return; // 既にsetTimeout設定済の
-        state.temporarilyOpen = { 
-            node
-            , timerId: window.setTimeout(() => {
-                console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
-                if (state.temporarilyOpen) {
-                    state.temporarilyOpen.node.isFolding = false;
-                    state.temporarilyOpen = null;
-                }
-            }, 800) 
-        }
-    }
     ,
     /**
      * dragleaveだと、子要素に入ったときも発火してキャンセルしてしまうのでmouseleaveを使っている。
@@ -524,6 +543,7 @@ ul.tree(
       @dblclick.prevent="handlers['toggle-editing']($event, state.tree.id, true)"
       @mouseover.prevent.stop="handlers['hover']($event, state.tree.id, true)"
       @mouseout.prevent.stop="handlers['hover']($event, state.tree.id, false)"
+      @dragenter.prevent.stop="handlers['dragenter']($event, state.tree)"
     )
       i.mdi(
         v-if="state.tree.subtrees.length > 0"
@@ -549,7 +569,6 @@ ul.tree(
       v-if="!state.tree.isFolding"
       :data-id="state.tree.id"
       :class="{ modified: state.isModified }"
-      @dragenter="handlers['dragenter']($event, state.tree)"
     )
       li(
         v-for="childnode in state.tree.subtrees",
@@ -564,7 +583,7 @@ ul.tree(
           @dblclick.prevent="handlers['toggle-editing']($event, childnode.id, true)"
           @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
           @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
-          @dragenter="handlers['dragenter-temporarily-open']($event, childnode)"
+          @dragenter.prevent.stop="handlers['dragenter']($event, childnode)"
           @mouseleave.stop="handlers['mouse-leave']($event, childnode)"
         )
           i.mdi(
@@ -597,7 +616,6 @@ ul.tree(
           @dragenter="handlers['dragenter']"
           @dragstart="handlers['dragstart']"
           @dragend="handlers['dragend']"
-          @dragenter-temporarily-open="handlers['dragenter-temporarily-open']"
           @mouse-leave="handlers['mouse-leave']"
           @toggle-folding="handlers['toggle-folding']"
           @toggle-editing="handlers['toggle-editing']"

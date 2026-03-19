@@ -25,7 +25,6 @@ const handlers: TreenodeEventHandlers<T> = {
     "dragenter" : (e: DragEvent, _treenode: T) => emit("dragenter", e, _treenode)
     , "dragstart" : (e: DragEvent, parent: T, _treenode: T) => emit("dragstart", e, parent, _treenode)
     , "dragend" : (e: DragEvent, _treenode: T) => emit("dragend", e, _treenode)
-    , "dragenter-temporarily-open" : (e: DragEvent, _treenode: T) => emit("dragenter-temporarily-open", e, _treenode)
     , "mouse-leave" : (e: MouseEvent, _treenode: T) => emit("mouse-leave", e, _treenode)
     , "toggle-folding" : (e: MouseEvent, id: string) => emit("toggle-folding", e, id)
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing)
@@ -36,7 +35,7 @@ const handlers: TreenodeEventHandlers<T> = {
 <template lang="pug">
 ul.subtree(
   :data-id="props.node.id"
-  @dragenter="handlers['dragenter']($event, props.node)"
+  @dragenter.prevent.stop="handlers['dragenter']($event, props.node)"
 )
   li(
     v-for="childnode in props.node.subtrees",
@@ -51,7 +50,7 @@ ul.subtree(
       @dblclick.prevent="handlers['toggle-editing']($event, childnode.id, true)"
       @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
       @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
-      @dragenter="handlers['dragenter-temporarily-open']($event, childnode)"
+      @dragenter.prevent.stop="handlers['dragenter']($event, childnode)"
       @mouseleave.stop="handlers['mouse-leave']($event, childnode)"
     )
       i.mdi(
@@ -84,7 +83,6 @@ ul.subtree(
       @dragenter="handlers['dragenter']"
       @dragstart="handlers['dragstart']"
       @dragend="handlers['dragend']"
-      @dragenter-temporarily-open="handlers['dragenter-temporarily-open']"
       @mouse-leave="handlers['mouse-leave']"
       @toggle-folding="handlers['toggle-folding']"
       @toggle-editing="handlers['toggle-editing']"
