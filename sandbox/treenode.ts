@@ -29,7 +29,27 @@ export class MyTreenode extends BaseTreenode<MyContent> {
         this._content = newContent;
     }
 
+    private collectFoldingStates(map = new Map<string, boolean | undefined>()): Map<string, boolean | undefined> {
+        map.set(this.id, this.isFolding);
+        for (const subtree of this._subtrees) {
+            subtree.collectFoldingStates(map);
+        }
+        return map;
+    }
+
+    private restoreFoldingStates(map: Map<string, boolean | undefined>) {
+        const state = map.get(this.id);
+        if (state !== undefined) {
+            this.isFolding = state;
+        }
+        for (const subtree of this._subtrees) {
+            subtree.restoreFoldingStates(map);
+        }
+    }
+
     rearrange(targetId : string, from: string, to: string, index: number) {
+        const foldingStates = this.collectFoldingStates();
+
         const target = this.findNodeById(targetId)?._content;
         const exParent = this.findNodeById(from)?._content;
         const newParent = this.findNodeById(to)?._content;
@@ -41,5 +61,8 @@ export class MyTreenode extends BaseTreenode<MyContent> {
         // newParent.isFolding = false;
         // サブツリーを再構築
         this._subtrees = this.content.children.map(c => new (this.constructor as any)(c));
+
+        // isFolding を復元
+        this.restoreFoldingStates(foldingStates);
     }
 }
