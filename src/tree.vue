@@ -323,6 +323,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                         console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
                         if (state.temporarilyOpen) {
                             state.temporarilyOpen.node.isFolding = false;
+                            emit("toggle-folding", state.temporarilyOpen.node.id);
                             state.temporarilyOpen = null;
                             if (subtree) {
                                 handleSubtreeDragEnter(subtree, e.clientY, node);
