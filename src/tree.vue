@@ -283,6 +283,12 @@ const handleSubtreeDragEnter = (
     state.draggingOn.siblings = siblings;
 }
 
+const onDocumentClick = (e: MouseEvent) => {
+    e.preventDefault();
+    emit("select", undefined);
+    document.removeEventListener("click", onDocumentClick);
+}
+
 const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
      * dragstgartで作成したmirageを、dragenterしたULの子要素として挿入します。
@@ -514,6 +520,10 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => {
         state.tree.onToggleHovering(id, isHovering);
     }
+    , "click" : (e: MouseEvent, node: InnerTreenode<T>) => {
+        document.addEventListener("click", onDocumentClick)
+        emit("select", node);
+    }
 };
 
 /* 領域外のドロップに対してもデフォルトのアニメーションをキャンセルする */
@@ -550,6 +560,7 @@ ul.tree(
   li(:data-id="state.tree.id")
     .tree-header(
       @dblclick.prevent="handlers['toggle-editing']($event, state.tree.id, true)"
+      @click.prevent.stop="handlers['click']($event, state.tree)"
       @mouseover.prevent.stop="handlers['hover']($event, state.tree.id, true)"
       @mouseout.prevent.stop="handlers['hover']($event, state.tree.id, false)"
       @dragenter.prevent.stop="handlers['dragenter']($event, state.tree)"
@@ -591,6 +602,7 @@ ul.tree(
       )
         .tree-item(
           @dblclick.prevent="handlers['toggle-editing']($event, childnode.id, true)"
+          @click.prevent.stop="handlers['click']($event, childnode)"
           @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
           @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
           @dragenter.prevent.stop="handlers['dragenter']($event, childnode)"
@@ -630,6 +642,7 @@ ul.tree(
           @toggle-folding="handlers['toggle-folding']"
           @toggle-editing="handlers['toggle-editing']"
           @hover="handlers['hover']"
+          @click="handlers['click']"
         )
           template(v-if="slots.default !== undefined" v-slot="slotProps")
             slot(

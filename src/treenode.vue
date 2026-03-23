@@ -29,6 +29,7 @@ const handlers: TreenodeEventHandlers<T> = {
     , "toggle-folding" : (e: MouseEvent, id: string) => emit("toggle-folding", e, id)
     , "toggle-editing" : (e: MouseEvent, id: string, isEditing: boolean) => emit("toggle-editing", e, id, isEditing)
     , "hover" : (e: MouseEvent, id: string, isHovering: boolean) => emit("hover", e, id, isHovering)
+    , "click" : (e: MouseEvent, node: T) => emit("click", e, node)
 }
 </script>
 
@@ -48,6 +49,7 @@ ul.subtree(
   )
     .tree-item(
       @dblclick.prevent="handlers['toggle-editing']($event, childnode.id, true)"
+      @click.prevent.stop="handlers['click']($event, childnode)"
       @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
       @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
       @dragenter.prevent.stop="handlers['dragenter']($event, childnode)"
@@ -87,6 +89,7 @@ ul.subtree(
       @toggle-folding="handlers['toggle-folding']"
       @toggle-editing="handlers['toggle-editing']"
       @hover="handlers['hover']"
+      @click="handlers['click']"
     )
       template(v-if="slots.default !== undefined" v-slot="slotProps")
         slot(

@@ -70,6 +70,7 @@ export type TreenodeEvents<T> = {
     "toggle-folding" : [event: MouseEvent, id: string];
     "toggle-editing" : [event: MouseEvent, id: string, isEditing: boolean];
     "hover" : [event: MouseEvent, id: string, isHovering: boolean];
+    "click" : [event: MouseEvent, node: T];
 };
 
 export type TreenodeEventHandlers<T> = EventHandlersFromEvents<TreenodeEvents<T>>;

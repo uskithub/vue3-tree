@@ -14,6 +14,7 @@ export type TreeEvents<U, T extends BaseTreenode<U>> = {
     "toggle-folding" : [id: T["id"]];
     "toggle-editing" : [id: T["id"], isEditing: boolean];
     "update-name" : [id: T["id"], newValue: T["name"]];
+    "select" : [node: T | undefined];
 };
 
 // treeコンポーネントを利用する側で使う

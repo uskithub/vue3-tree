@@ -200,6 +200,12 @@ const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
         if (_node === null) return;
         _node.content.title = newValue;
         state.version += 1;
+    }, "select" : (node: MyTreenode | undefined) => {
+      if (node) {
+        console.log(`${node.name} is clicked`);
+      } else {
+        console.log("no node is selected");
+      }
     }
 }
 </script>
@@ -214,6 +220,7 @@ main
     @rearrange="handlers['rearrange']"
     @toggle-folding="handlers['toggle-folding']"
     @update-name="handlers['update-name']"
+    @select="handlers['select']"
   )
   textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
@@ -224,6 +231,7 @@ main
     @rearrange="handlers['rearrange']"
     @toggle-folding="handlers['toggle-folding']"
     @update-name="handlers['update-name']"
+    @select="handlers['select']"
   )
     template(v-slot="slotProps")
       input(
