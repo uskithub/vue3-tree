@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-task-tree.sh\"",
+            "timeout": 10,
+            "statusMessage": "docs/TASK-TREE.md の更新を確認中"
+          }
+        ]
+      }
+    ]
+  }
+}
