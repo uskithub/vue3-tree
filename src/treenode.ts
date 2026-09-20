@@ -38,7 +38,6 @@ export abstract class BaseTreenode<T> implements TreenodeCore<T> {
         const node = findNodeById<T, this>(id, this);
         if (node === null) return;
         node.isFolding = !node.isFolding;
-        console.log(`onToggleFolding: ${node.name} ${node.isFolding}`, node);
     }
 
     toJSON(this: BaseTreenode<T>) {

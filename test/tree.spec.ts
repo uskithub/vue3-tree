@@ -1,6 +1,6 @@
 import { mount } from "@vue/test-utils"
 import { describe, expect, test } from "vitest"
-import { BaseUpdatableTreenode, tree } from "../src";
+import { BaseTreenode, VTree } from "../src";
 
 type MyContent = {
     id : string;
@@ -9,7 +9,7 @@ type MyContent = {
     children : MyContent[];
 };
 
-class MyTreenode extends BaseUpdatableTreenode<MyContent> {
+class MyTreenode extends BaseTreenode<MyContent> {
     private _content: MyContent;
     private _subtrees: this[];
     
@@ -161,7 +161,7 @@ const treeContent = {
 
 describe('Component', () => {
     test('is a Vue instance', () => {
-        const wrapper = mount(tree, {
+        const wrapper = mount(VTree, {
             props: {
                 node: new MyTreenode(treeContent),
                 version: 0

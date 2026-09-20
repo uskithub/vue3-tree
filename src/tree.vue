@@ -154,8 +154,7 @@ const state = reactive<State>({
     , reserve : null
 }) as State; // 型を指定してあげないと、T が UnwrapRef<T> になってしまう
 
-watch(() => props.version, (newVal: number) => {
-    console.log("version", newVal);
+watch(() => props.version, () => {
     state.tree = new InnerTreenode(props.node);
     state.isModified = false;
 });
@@ -326,7 +325,6 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
                 state.temporarilyOpen = { 
                     node
                     , timerId: window.setTimeout(() => {
-                        console.log("onDragenterTemporarilyOpen.setTimeout", state.temporarilyOpen);
                         if (state.temporarilyOpen) {
                             state.temporarilyOpen.node.isFolding = false;
                             emit("toggle-folding", state.temporarilyOpen.node.id);
@@ -375,7 +373,6 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
      * @param e 
      */
     "dragend" : (e: DragEvent, _node: InnerTreenode<T>) => {
-        console.log("onDragend");
         const elem = e.currentTarget as HTMLElement; // must be same as `state.dragging.elem`
         elem.classList.remove("dragging");
 
@@ -588,7 +585,6 @@ ul.tree(
     ul.subtree(
       v-if="!state.tree.isFolding"
       :data-id="state.tree.id"
-      :class="{ modified: state.isModified }"
       @dragenter.prevent.stop="handlers['dragenter']($event, state.tree)"
     )
       li(
@@ -723,10 +719,6 @@ ul.tree(
       li:has(> ul.subtree.drop-target)
         background-color: #fff
         z-index: 100
-
-    .subtree.modified:before
-      content: "modification has not reflected."
-      color: #f00
 
   &:not(.is-dragging)
     :deep(li)

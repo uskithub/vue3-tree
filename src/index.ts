@@ -11,9 +11,6 @@ export { findNodeById, BaseUpdatableTreenode as BaseTreenode } from "./treenode"
 // Components - export for direct import usage
 export { VTree, VTreenode };
 
-// Legacy export for backward compatibility
-export { VTree as tree };
-
 // Plugin exports
 export { createVue3Tree, Vue3TreePlugin, type Vue3TreePluginOptions } from "./plugin";
 

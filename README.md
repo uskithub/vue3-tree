@@ -228,8 +228,8 @@ touched while a drag is still in flight, and so that display-only flags (`isEdit
 1. Handle `rearrange` / `update-name` by updating your own model.
 2. Increment `version`.
 
-Watching `version` is what rebuilds the internal tree. Until you do, the subtree is
-marked with `modification has not reflected.` to show the two sides have diverged.
+Watching `version` is what rebuilds the internal tree. Until you do, the component keeps
+showing its own copy, which no longer matches your model.
 
 Nodes handed to event handlers and to the slot are nodes of that internal copy, not your
 own instances — their `content` is the same object reference, but methods you defined on
