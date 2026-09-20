@@ -50,7 +50,5 @@
 
 - `src/tree.vue` の 1 段目と `src/treenode.vue` の 2 段目以降でマークアップが重複している。共通化したいが、ルートだけ `.tree-header`、以降は `.tree-item` とクラスが異なり、単純には括り出せない。
 - lint / formatter が未導入。`yarn typecheck` が事実上の代わりになっている。
-- `yarn.lock` に未コミットの差分があり、`.yarn/` が未追跡。Yarn 4 の管理ファイルをどこまでコミットするか決めていない。
 - ドラッグ処理が `tree.vue` に 700 行超で集中している。composable への切り出しは D-1 の「state はひとつ」を壊さない範囲で検討する。
 - イベントとスロットに渡るノードは内部コピー（`InnerTreenode`）で、利用側クラスで定義したメソッドを持たない。一方、公開型 `TreeEventHandlers<U, T>` は `T` が渡る形になっており、型と実体がずれている。README には実態を注記した。
-- `node_modules/.bin` に `vue-tsc` / `vitest` のリンクが無く、`yarn` も PATH に無いため、CLAUDE.md に書いた `yarn typecheck` / `yarn vitest run` はこの環境ではそのまま動かない。今回は `node node_modules/vue-tsc/bin/vue-tsc.js` と `node node_modules/vitest/vitest.mjs` を直接実行した。`yarn install` のやり直しが要る（未コミットの `yarn.lock` 差分、未追跡の `.yarn/` と関係している可能性がある）。T-3 の前に片付ける。
