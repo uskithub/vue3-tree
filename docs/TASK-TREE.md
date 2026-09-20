@@ -13,7 +13,7 @@
 
 ## 現在のフォーカス
 
-**T-4** — テストを通る状態にする
+**T-5** — 公開する
 
 ## マイルストーン 1: v0.2.0 を npm に公開する
 
@@ -31,9 +31,9 @@
   - [x] T-3.1 `yarn build` を通し、`dist/types` の出力内容を確認する
   - [x] T-3.2 外部プロジェクトから ESM / UMD 双方で import し、型が効くことを確認する（`node_modules/vue3-tree` を自身へのリンクにした consumer で検証。props・events・slot すべて型が効くこと、ESM / UMD の export が一致することを確認）
   - [x] T-3.3 `tree.vue` に `defineSlots` を追加し、`d.ts` の `slots` が `{}` になる問題を直す（T-3.2 で発見。R-7 が TypeScript 利用者に対して満たせていなかった）
-- [ ] **T-4** テストを通る状態にする → SPEC 2.1
+- [x] **T-4** テストを通る状態にする → SPEC 2.1
   - [x] T-4.1 テストを通す（2026-09-20、T-2 の検証として実施。テスト 1 件パス、スナップショット更新は不要だった。`test/tree.spec.ts` の import 名のずれは T-2.1 の対応で解消済み）
-  - [ ] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する
+  - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
 - [ ] **T-5** 公開する → SPEC 2.2
   - [ ] T-5.1 `package.json` の version を 0.2.0 にする
   - [ ] T-5.2 `npm publish`（`prepublishOnly` で build が走る）
@@ -53,3 +53,5 @@
 - lint / formatter が未導入。`yarn typecheck` が事実上の代わりになっている。
 - ドラッグ処理が `tree.vue` に 700 行超で集中している。composable への切り出しは D-1 の「state はひとつ」を壊さない範囲で検討する。
 - イベントとスロットに渡るノードは内部コピー（`InnerTreenode`）で、利用側クラスで定義したメソッドを持たない。一方、公開型 `TreeEventHandlers<U, T>` は `T` が渡る形になっており、型と実体がずれている。README には実態を注記した。
+- `tsconfig.test.json` での型チェックを走らせる npm script が無い。`yarn typecheck` は `src/` だけが対象なので、テストの型崩れに気づけない（実際 `test/tree.spec.ts` は型エラーを抱えたままだった）。script の追加を検討する。
+- happy-dom は `Element.animate` を持たず、`getComputedStyle` の戻り値が iterable でなく、レイアウトも持たない。そのため `rearrange` のテストはこの 3 つのスタブ前提になっている。ドロップ位置の計算そのものは検証できているが、実ブラウザでの挙動は sandbox で目視確認するしかない。

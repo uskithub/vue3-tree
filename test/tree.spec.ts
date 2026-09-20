@@ -31,20 +31,20 @@ class MyTreenode extends BaseTreenode<MyContent> {
         this._content = newContent;
     }
 
-    findNodeById(id: string, node: MyContent = this._content): MyContent | null {
+    private findContentById(id: string, node: MyContent = this._content): MyContent | null {
         if (node.id === id) { return node; }
 
         for (const child of node.children) {
-            const found = this.findNodeById(id, child);
+            const found = this.findContentById(id, child);
             if (found) { return found; }
         }
         return null;
     }
 
     rearrange(targetId : string, from: string, to: string, index: number) {
-        const node = this.findNodeById(targetId);
-        const exParent = this.findNodeById(from);
-        const newParent = this.findNodeById(to);
+        const node = this.findContentById(targetId);
+        const exParent = this.findContentById(from);
+        const newParent = this.findContentById(to);
         if (node === null || exParent === null || newParent === null) return;
         // 元親から削除
         exParent.children = exParent.children.filter((child: MyContent) => child.id !== targetId);
