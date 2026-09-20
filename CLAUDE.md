@@ -38,5 +38,6 @@ yarn build        # typecheck → dist 削除 → vite build → 型定義出力
 - 外部から渡された `props.node` は `InnerTreenode` にコピーして内部で保持する。外部のツリーを直接書き換えない。外部側の変更を内部へ反映させるには `version` prop をインクリメントする。
 - ドロップ先の判定は DOM 構造（`ul.subtree` と `data-id`）とクラス名（`tree-header` / `tree-item` / `subtree` / `mirage` / `drop-target`）に依存している。これらはイベントハンドラの分岐条件そのものなので、スタイル都合で改名しない。
 - template は pug。`@vue/language-plugin-pug` 経由で vue-tsc が読むため、pug をやめると型定義の出力が壊れる。
+- `tree.vue` の slot 型は `defineSlots` で明示する。`useSlots()` だけだと生成される `d.ts` の `slots` が `{}` になり、利用側の `#default` が型エラーになる（テンプレートからは推論されない）。
 - `dist/` は生成物。直接編集しない。生成元は `src/`。
 - ライブラリなので `vue` / `vuetify` は external。`src/` から `vuetify` を import しない（CSS 変数 `--v-theme-*` の参照に留める）。`@mdi/font` の CSS は利用側で import させる。

@@ -75,6 +75,18 @@ const slots = useSlots();
 
 const emit = defineEmits<TreeEvents<U, InnerTreenode<T>>>();
 
+// @note: useSlots() だけでは slot の型が公開されず、利用側の #default が型エラーになるため明示する。
+defineSlots<{
+    default?(props: {
+        node: InnerTreenode<T>;
+        parent?: InnerTreenode<T>;
+        depth: number;
+        isHovering: boolean;
+        isEditing: boolean;
+        endEditing: (shouldCommit: boolean) => void;
+    }): any;
+}>();
+
 /**
  * targetUl が ofElem 自身かその子孫の場合 true を返します。
  * @param targetUl 
