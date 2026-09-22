@@ -37,7 +37,7 @@
   - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
 - [ ] **T-5** 公開する → SPEC 2.2
   - [x] T-5.1 `package.json` の version を 0.2.0 にする（2026-09-22、D-9）
-  - [!] T-5.2 `npm publish`（`prepublishOnly` で build が走る）— ブロック理由: npm に未ログイン（`npm adduser` が必要）。パッケージ名は `vue3-dnd-tree` に決定済み（D-10）。実行は外向きの操作なので、着手前にユーザーへ確認する
+  - [!] T-5.2 npm に publish する — ブロック理由: npm アカウントの 2FA により 403（`Two-factor authentication or granular access token with bypass 2fa enabled is required`）。OTP を伴う実行が必要なので、ユーザー自身に `npm publish --ignore-scripts --otp=<code>` を実行してもらうか、Trusted Publisher を未公開パッケージに事前登録できるか npmjs.com で確認する。2026-09-22 時点で registry には未作成
   - [ ] T-5.3 `v0.2.0` タグを push する（`release.yml` が publish と GitHub Release の作成まで行う。ただし初回 publish の手段が未決 → SPEC 5）
   - [x] T-5.4 LICENSE ファイルを追加する（2026-09-22。Apache-2.0 の公式全文を取得し、著作権表記を最初のコミット年に合わせて `Copyright 2023 Yusuke SAITO` とした）
   - [x] T-5.5 公開物を整理する（2026-09-22。`.d.ts.map` の生成を止め、`tsbuildinfo` を `dist/` の外へ移動。`.js.map` は `sourcesContent` を持つので残す。CHANGELOG.md は `files` に追加。49.1kB → 47.2kB、unpacked 179.4kB → 173.2kB）
@@ -59,3 +59,4 @@
 - ドラッグ処理が `tree.vue` に 700 行超で集中している。composable への切り出しは D-1 の「state はひとつ」を壊さない範囲で検討する。
 - イベントとスロットに渡るノードは内部コピー（`InnerTreenode`）で、利用側クラスで定義したメソッドを持たない。一方、公開型 `TreeEventHandlers<U, T>` は `T` が渡る形になっており、型と実体がずれている。README には実態を注記した。
 - happy-dom は `Element.animate` を持たず、`getComputedStyle` の戻り値が iterable でなく、レイアウトも持たない。そのため `rearrange` のテストはこの 3 つのスタブ前提になっている。ドロップ位置の計算そのものは検証できているが、実ブラウザでの挙動は sandbox で目視確認するしかない。
+- `package.json` の scripts は `yarn` 前提（`prepublishOnly: "yarn build"` など）。この環境は corepack 経由でしか yarn を呼べず PATH に無いため、`npm publish` が走らせる `prepublishOnly` が `sh: yarn: command not found` で落ちる。ローカルから publish する場合は `corepack yarn build` を先に済ませて `--ignore-scripts` を付ける。CI は `corepack enable` 済みなので影響しない。
