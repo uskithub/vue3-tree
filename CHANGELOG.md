@@ -10,6 +10,10 @@ version stays below 1.0.0, breaking changes ship in minor releases — see D-9 i
 
 ### Changed
 
+- The package is published to npm as `vue3-dnd-tree`. The name `vue3-tree` belongs to
+  an unrelated project on npm, so imports and the UMD global (`Vue3DndTree`) use the
+  new name.
+
 - **Breaking.** The plugin registers its components as `Vue3Tree` and `Vue3Treenode`
   instead of `tree` and `treenode`. `V*` is Vuetify's namespace, so a package-derived
   prefix keeps the two apart.
@@ -25,8 +29,8 @@ version stays below 1.0.0, breaking changes ship in minor releases — see D-9 i
 - **Breaking.** Removed the legacy `tree` export. The component is exported as `VTree`.
 
   ```diff
-  - import { tree } from "vue3-tree";
-  + import { VTree } from "vue3-tree";
+  - import { tree } from "vue3-dnd-tree";
+  + import { VTree } from "vue3-dnd-tree";
   ```
 
 ### Fixed

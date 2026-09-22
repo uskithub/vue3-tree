@@ -29,8 +29,8 @@ export interface Vue3TreePluginOptions {
  * ```ts
  * import { createApp } from 'vue'
  * import { createVuetify } from 'vuetify'
- * import { createVue3Tree } from 'vue3-tree'
- * import 'vue3-tree/style.css'
+ * import { createVue3Tree } from 'vue3-dnd-tree'
+ * import 'vue3-dnd-tree/style.css'
  *
  * const app = createApp(App)
  * const vuetify = createVuetify()
@@ -60,8 +60,8 @@ export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin<[]> 
  * @example
  * ```ts
  * import { createApp } from 'vue'
- * import Vue3Tree from 'vue3-tree'
- * import 'vue3-tree/style.css'
+ * import Vue3Tree from 'vue3-dnd-tree'
+ * import 'vue3-dnd-tree/style.css'
  *
  * const app = createApp(App)
  * app.use(Vue3Tree)

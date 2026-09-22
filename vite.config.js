@@ -13,8 +13,8 @@ export default defineConfig({
         outDir: "./dist",
         lib: {
             entry: path.resolve(__dirname, "src/index.ts"),
-            name: "Vue3Tree",
-            fileName: (format) => `vue3-tree.${format}.js`,
+            name: "Vue3DndTree",
+            fileName: (format) => `vue3-dnd-tree.${format}.js`,
         },
         rollupOptions: {
             // External dependencies - these should be provided by the consuming application

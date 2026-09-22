@@ -1,5 +1,5 @@
-vue3-tree
-==========
+vue3-dnd-tree
+=============
 
 A tree component for Vue 3 and Vuetify 3 with drag and drop support.
 
@@ -11,9 +11,9 @@ A tree component for Vue 3 and Vuetify 3 with drag and drop support.
 # Install
 
 ```bash
-npm install vue3-tree
+npm install vue3-dnd-tree
 # or
-yarn add vue3-tree
+yarn add vue3-dnd-tree
 ```
 
 `vue`, `vuetify` and `@mdi/font` are peer dependencies. `vuetify` and `@mdi/font` are
@@ -26,8 +26,8 @@ read Vuetify theme variables, so a Vuetify app is the intended host.
 
 ```ts
 import { createApp } from "vue";
-import { createVue3Tree } from "vue3-tree";
-import "vue3-tree/style.css";
+import { createVue3Tree } from "vue3-dnd-tree";
+import "vue3-dnd-tree/style.css";
 import "@mdi/font/css/materialdesignicons.css";
 
 const app = createApp(App);
@@ -47,15 +47,15 @@ The default export is the same plugin with the default names, so `app.use(Vue3Tr
 also works:
 
 ```ts
-import Vue3Tree from "vue3-tree";
+import Vue3Tree from "vue3-dnd-tree";
 ```
 
 ## Direct import
 
 ```vue
 <script setup lang="ts">
-import { VTree } from "vue3-tree";
-import "vue3-tree/style.css";
+import { VTree } from "vue3-dnd-tree";
+import "vue3-dnd-tree/style.css";
 </script>
 
 <template>
@@ -69,7 +69,7 @@ Extend `BaseTreenode<T>`, where `T` is your own content type. The component neve
 mutates your objects, so the class is just an adapter over the data you already have.
 
 ```ts
-import { BaseTreenode } from "vue3-tree";
+import { BaseTreenode } from "vue3-dnd-tree";
 
 export type Task = {
   id: string;
@@ -118,7 +118,7 @@ standalone `findNodeById(id, node)` is exported as well.
 ```vue
 <script setup lang="ts">
 import { reactive } from "vue";
-import type { TreeEventHandlers } from "vue3-tree";
+import type { TreeEventHandlers } from "vue3-dnd-tree";
 import { TaskNode, type Task } from "./task-node";
 
 type State = { root: TaskNode; version: number };

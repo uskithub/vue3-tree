@@ -1,25 +1,26 @@
 {
-  "name": "vue3-tree",
+  "name": "vue3-dnd-tree",
   "version": "0.2.0",
   "description": "A tree component for Vue 3 and Vuetify 3 with drag and drop support",
-  "main": "dist/vue3-tree.umd.js",
-  "module": "dist/vue3-tree.es.js",
+  "main": "dist/vue3-dnd-tree.umd.js",
+  "module": "dist/vue3-dnd-tree.es.js",
   "types": "dist/types/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "exports": {
     ".": {
       "import": {
         "types": "./dist/types/index.d.ts",
-        "default": "./dist/vue3-tree.es.js"
+        "default": "./dist/vue3-dnd-tree.es.js"
       },
       "require": {
         "types": "./dist/types/index.d.ts",
-        "default": "./dist/vue3-tree.umd.js"
+        "default": "./dist/vue3-dnd-tree.umd.js"
       }
     },
-    "./style.css": "./dist/vue3-tree.css"
+    "./style.css": "./dist/vue3-dnd-tree.css"
   },
   "sideEffects": [
     "*.css",

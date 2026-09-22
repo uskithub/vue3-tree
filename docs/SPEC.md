@@ -176,6 +176,15 @@ default slot props:
 - 却下した案: 破壊的変更を含むので 1.0.0 にする — API を凍結する準備ができていない。未決事項の Vuetify 非依存化とアクセシビリティは、どちらも公開 API に影響しうる。
 - 覆す条件: 未決事項が片付き、API を凍結できる状態になったとき。
 
+### D-10: npm の公開名は `vue3-dnd-tree` にする
+
+- 日付: 2026-09-22
+- 決定: npm のパッケージ名を `vue3-dnd-tree` とする。`dist/` のファイル名と UMD のグローバル名（`Vue3DndTree`）も揃える。GitHub のリポジトリ名は `uskithub/vue3-tree` のまま変えない。
+- 理由: npm の `vue3-tree` は無関係の別プロジェクト（teamseodo、0.11.5 まで公開、最終更新 2023-01）が保持しており、この名前では publish できない。
+- 却下した案: `@uskithub/vue3-tree` / `@jibunstyle/vue3-tree` — どちらも空いていたが、スコープの用意が要る。`vue3-draggable-tree` — 空いているが長い。
+- 影響: リポジトリ名と npm 名が食い違う。README の見出しは npm 名に合わせた。Yarn 4 の `yarn.lock` はワークスペースをパッケージ名で記録しているため、改名後は `yarn install` が必要（しないとビルドが Internal Error で落ちる）。
+- 覆す条件: 特になし。
+
 ## 5. 未決事項
 
 決まっていないことを明示する。ここにある項目は実装してはいけない。

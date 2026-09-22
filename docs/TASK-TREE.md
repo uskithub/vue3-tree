@@ -37,10 +37,10 @@
   - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
 - [ ] **T-5** 公開する → SPEC 2.2
   - [x] T-5.1 `package.json` の version を 0.2.0 にする（2026-09-22、D-9）
-  - [!] T-5.2 `npm publish`（`prepublishOnly` で build が走る）— ブロック理由: npm の `vue3-tree` は別人（teamseodo）のパッケージで、0.11.5 まで公開済み。この名前では publish できない。パッケージ名を決め直す必要がある（`@uskithub/vue3-tree`、`@jibunstyle/vue3-tree`、`vue3-draggable-tree`、`vue3-dnd-tree` はいずれも空き）。加えて npm に未ログイン
+  - [!] T-5.2 `npm publish`（`prepublishOnly` で build が走る）— ブロック理由: npm に未ログイン（`npm adduser` が必要）。パッケージ名は `vue3-dnd-tree` に決定済み（D-10）。実行は外向きの操作なので、着手前にユーザーへ確認する
   - [ ] T-5.3 git tag と GitHub release を作る
-  - [ ] T-5.4 LICENSE ファイルを追加する（`package.json` は Apache-2.0 を宣言しているが実ファイルが無く、公開物にも入らない）
-  - [ ] T-5.5 公開物から不要なものを外す（`npm pack` で確認。`dist/tsconfig.build-types.tsbuildinfo` が同梱される。`.js.map` / `.d.ts.map` は `src/` を同梱していないため参照先が無く、98kB がパッケージ 179kB の過半を占める）
+  - [x] T-5.4 LICENSE ファイルを追加する（2026-09-22。Apache-2.0 の公式全文を取得し、著作権表記を最初のコミット年に合わせて `Copyright 2023 Yusuke SAITO` とした）
+  - [x] T-5.5 公開物を整理する（2026-09-22。`.d.ts.map` の生成を止め、`tsbuildinfo` を `dist/` の外へ移動。`.js.map` は `sourcesContent` を持つので残す。CHANGELOG.md は `files` に追加。49.1kB → 47.2kB、unpacked 179.4kB → 173.2kB）
   - [x] T-5.6 CHANGELOG.md を作る（2026-09-22。0.2.0 は unreleased のまま。publish 時に日付を入れる）
 
 ## 完了済み
