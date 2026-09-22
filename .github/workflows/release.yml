@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # GitHub Release を作るため
+  id-token: write # npm の Trusted Publishing (OIDC) に必要
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - run: corepack enable
+
+      # Trusted Publishing は npm 11.5.1 以上を要求する
+      - name: Ensure npm supports trusted publishing
+        run: |
+          npm install -g "npm@^11.5.1"
+          npm --version
+
+      - run: yarn install --immutable
+
+      - name: Verify the tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag ${tag} does not match package.json ${pkg}" >&2
+            exit 1
+          fi
+
+      - run: yarn typecheck
+
+      - run: yarn typecheck:test
+
+      - run: yarn test:run
+
+      # prepublishOnly が yarn build を走らせる。--provenance で来歴を署名する
+      - run: npm publish --provenance --access public
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes

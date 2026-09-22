@@ -34,6 +34,8 @@
     "build:types": "vue-tsc --project tsconfig.build-types.json --declaration --emitDeclarationOnly --outDir dist/types",
     "typecheck": "vue-tsc --project tsconfig.build-types.json --noEmit",
     "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck:test": "vue-tsc --project tsconfig.test.json --noEmit",
     "prepublishOnly": "yarn build"
   },
   "publishConfig": {

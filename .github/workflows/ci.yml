@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: corepack enable
+
+      - run: yarn install --immutable
+
+      - run: yarn typecheck
+
+      - run: yarn typecheck:test
+
+      - run: yarn test:run
+
+      # dist/ は公開物。型定義まで含めて生成できることを確認する
+      - run: yarn build

@@ -185,6 +185,15 @@ default slot props:
 - 影響: リポジトリ名と npm 名が食い違う。README の見出しは npm 名に合わせた。Yarn 4 の `yarn.lock` はワークスペースをパッケージ名で記録しているため、改名後は `yarn install` が必要（しないとビルドが Internal Error で落ちる）。
 - 覆す条件: 特になし。
 
+### D-11: リリースは GitHub Actions から行う
+
+- 日付: 2026-09-22
+- 決定: `.github/workflows/ci.yml`（push / PR で typecheck・テスト・ビルド、Node 22 と 24）と `.github/workflows/release.yml`（`v*` タグの push で publish と GitHub Release 作成）を置く。npm の認証は Trusted Publishing（OIDC）を使い、`NPM_TOKEN` は保管しない。
+- 理由: npm は 2FA を迂回するトークンでの直接 publish を制限する方向にある。OIDC ならトークンを置かずに済む。加えて手元の環境差（node のバージョンを変えた結果 `node_modules/.bin` が壊れていた件）に左右されず、publish 前に必ず型チェックとテストが走る。
+- 却下した案: `NPM_TOKEN`（automation token）を secret に置く — 初回から Actions に載せられるが、まさに制限されようとしている経路で、secret の管理も増える。手動 publish を続ける — 手順が人に依存し、テストの実行も保証されない。
+- 制約: Trusted Publisher は npm のパッケージ設定画面から登録するため、パッケージが存在しない初回 publish には使えない。0.2.0 の出し方は別途決める（→ 5. 未決事項）。
+- 覆す条件: npm が OIDC の仕様を変えた場合。
+
 ## 5. 未決事項
 
 決まっていないことを明示する。ここにある項目は実装してはいけない。
@@ -192,3 +201,4 @@ default slot props:
 - [ ] Vuetify 非依存化をするか。現状 peerDependency は optional だが、スタイルは `--v-theme-*` と mdi アイコンに依存している。非依存化するなら CSS 変数のフォールバックとアイコンの差し替え口が要る。
 - [ ] アクセシビリティ（キーボード操作 / ARIA tree role）を将来スコープに入れるか。入れるなら D&D 以外の並べ替え手段が必要になる。
 - [ ] `select` の対象が単一ノードのままでよいか（複数選択の需要が出たら 1.3 の見直し）。
+- [ ] 0.2.0（初回 publish）をどう出すか。Trusted Publisher はパッケージが存在しないと登録できないため、D-11 の Actions からの OIDC publish は 2 回目以降しか使えない。ローカルからの手動 publish（すでにログイン済み）か、一時的な `NPM_TOKEN` を使うかを決める。
