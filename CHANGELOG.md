@@ -29,7 +29,7 @@ version stays below 1.0.0, breaking changes ship in minor releases — see D-9 i
 - **Breaking.** Removed the legacy `tree` export. The component is exported as `VTree`.
 
   ```diff
-  - import { tree } from "vue3-dnd-tree";
+  - import { tree } from "vue3-tree";
   + import { VTree } from "vue3-dnd-tree";
   ```
 

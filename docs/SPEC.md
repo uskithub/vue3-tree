@@ -1,4 +1,4 @@
-# SPEC — vue3-tree
+# SPEC — vue3-dnd-tree
 
 最終更新: 2026-09-22
 
@@ -193,6 +193,7 @@ default slot props:
 - 却下した案: `NPM_TOKEN`（automation token）を secret に置く — 初回から Actions に載せられるが、まさに制限されようとしている経路で、secret の管理も増える。手動 publish を続ける — 手順が人に依存し、テストの実行も保証されない。
 - 制約: Trusted Publisher は npm のパッケージ設定画面から登録するため、パッケージが存在しない初回 publish には使えない。0.2.0 の出し方は別途決める（→ 5. 未決事項）。
 - 覆す条件: npm が OIDC の仕様を変えた場合。
+- 実績: 0.2.0 は Trusted Publisher を登録できなかったため、対話ターミナルから手動で publish した（2026-09-22）。パッケージが存在するようになったので 0.2.1 以降は OIDC を使える。リリースノートは `--generate-notes` では PR しか並ばないため、`CHANGELOG.md` の該当節を使うようにした。
 
 ## 5. 未決事項
 
@@ -201,4 +202,3 @@ default slot props:
 - [ ] Vuetify 非依存化をするか。現状 peerDependency は optional だが、スタイルは `--v-theme-*` と mdi アイコンに依存している。非依存化するなら CSS 変数のフォールバックとアイコンの差し替え口が要る。
 - [ ] アクセシビリティ（キーボード操作 / ARIA tree role）を将来スコープに入れるか。入れるなら D&D 以外の並べ替え手段が必要になる。
 - [ ] `select` の対象が単一ノードのままでよいか（複数選択の需要が出たら 1.3 の見直し）。
-- [ ] 0.2.0（初回 publish）をどう出すか。Trusted Publisher はパッケージが存在しないと登録できないため、D-11 の Actions からの OIDC publish は 2 回目以降しか使えない。ローカルからの手動 publish（すでにログイン済み）か、一時的な `NPM_TOKEN` を使うかを決める。

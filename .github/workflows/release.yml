@@ -40,6 +40,22 @@ jobs:
             exit 1
           fi
 
+      - name: Extract the release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # --generate-notes は PR を並べるだけで、直接コミットしている間は中身が出ない。
+          # CHANGELOG.md の該当する節をそのままリリースノートにする。
+          awk -v v="## [${version}]" '
+            index($0, v) == 1 { inside = 1; next }
+            inside && /^## \[/ { exit }
+            inside { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ] || ! grep -q "[^[:space:]]" release-notes.md; then
+            echo "CHANGELOG.md has no entry for ${version}" >&2
+            exit 1
+          fi
+          cat release-notes.md
+
       - run: yarn typecheck
 
       - run: yarn typecheck:test
@@ -62,4 +78,4 @@ jobs:
       - name: Create the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --generate-notes
+        run: gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file release-notes.md

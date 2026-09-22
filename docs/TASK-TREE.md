@@ -1,4 +1,4 @@
-# TASK TREE — vue3-tree
+# TASK TREE — vue3-dnd-tree
 
 最終更新: 2026-09-22
 
@@ -13,42 +13,53 @@
 
 ## 現在のフォーカス
 
-**T-5** — 公開する
+**T-6** — Trusted Publisher を登録する
 
-## マイルストーン 1: v0.2.0 を npm に公開する
+## マイルストーン 2: リリース運用を仕上げる
 
-- [x] **T-1** README を現行 API に追従させる → SPEC 3.3
-  - [x] T-1.1 使用例を `BaseUpdatableTreenode<T>` の派生クラスに書き換える（現 README は廃止済みの `Treenode` 型リテラルのまま）
-  - [x] T-1.2 props に `version` を追加し、外部更新の反映手順を書く → SPEC 3.2
-  - [x] T-1.3 events を `rearrange` / `toggle-folding` / `toggle-editing` / `update-name` / `select` に差し替える（現 README の `arrange` / `hover` / `dragenter` は実在しない）
-  - [x] T-1.4 slot props を `node` / `parent` / `depth` / `isHovering` / `isEditing` / `endEditing` に更新する
-  - [x] T-1.5 プラグイン登録（`createVue3Tree` / `app.use`）とスタイル・mdi の読み込み手順を追記する
-- [x] **T-2** 公開する API を確定させる → SPEC 3.3
-  - [x] T-2.1 `src/index.ts` の後方互換 export（`tree`）を残すか決める。残すなら README に書き、消すなら破壊的変更として記録する
-  - [x] T-2.2 デバッグ用 `console.log` を除去する（`src/tree.vue`、`src/treenode.ts`）
-  - [x] T-2.3 `.subtree.modified:before` の "modification has not reflected." 表示が仕様か開発用かを決める → SPEC 2.1
-  - [x] T-2.4 グローバル登録名を `Vue3Tree` / `Vue3Treenode` に統一する（2026-09-22、D-8）。併せて、型拡張が `dist/types` に含まれず利用側で効いていなかった問題を `src/index.ts` への移動で解消
-- [x] **T-3** ビルドと型定義の出力を検証する → SPEC 2.2
-  - [x] T-3.1 `yarn build` を通し、`dist/types` の出力内容を確認する
-  - [x] T-3.2 外部プロジェクトから ESM / UMD 双方で import し、型が効くことを確認する（`node_modules/vue3-tree` を自身へのリンクにした consumer で検証。props・events・slot すべて型が効くこと、ESM / UMD の export が一致することを確認）
-  - [x] T-3.3 `tree.vue` に `defineSlots` を追加し、`d.ts` の `slots` が `{}` になる問題を直す（T-3.2 で発見。R-7 が TypeScript 利用者に対して満たせていなかった）
-- [x] **T-4** テストを通る状態にする → SPEC 2.1
-  - [x] T-4.1 テストを通す（2026-09-20、T-2 の検証として実施。テスト 1 件パス、スナップショット更新は不要だった。`test/tree.spec.ts` の import 名のずれは T-2.1 の対応で解消済み）
-  - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
-- [ ] **T-5** 公開する → SPEC 2.2
-  - [x] T-5.1 `package.json` の version を 0.2.0 にする（2026-09-22、D-9）
-  - [x] T-5.2 npm に publish する（2026-09-22、`vue3-dnd-tree@0.2.0`）。この環境からは publish できず、ユーザーが別ターミナルで `npm publish --ignore-scripts` を実行した。2FA がセキュリティキーのため、publish にはブラウザでの認証が必要で、非対話の実行では EOTP になる
-  - [~] T-5.3 `v0.2.0` タグを push する（`release.yml` が GitHub Release を作る。publish 済みなので publish ステップはスキップされる）
-  - [x] T-5.4 LICENSE ファイルを追加する（2026-09-22。Apache-2.0 の公式全文を取得し、著作権表記を最初のコミット年に合わせて `Copyright 2023 Yusuke SAITO` とした）
-  - [x] T-5.5 公開物を整理する（2026-09-22。`.d.ts.map` の生成を止め、`tsbuildinfo` を `dist/` の外へ移動。`.js.map` は `sourcesContent` を持つので残す。CHANGELOG.md は `files` に追加。49.1kB → 47.2kB、unpacked 179.4kB → 173.2kB）
-  - [x] T-5.6 CHANGELOG.md を作る（2026-09-22。0.2.0 は unreleased のまま。publish 時に日付を入れる）
-  - [x] T-5.7 CI と Release のワークフローを置く（2026-09-22、D-11）。`yarn install --immutable` までローカルで確認済み。`test:run` と `typecheck:test` の script も追加
+0.2.0 は手作業が残った状態で出た。次のリリースを `git tag` だけで完結させる。
+
+- [ ] **T-6** npm に Trusted Publisher を登録する → SPEC D-11
+  - ユーザー操作。https://www.npmjs.com/package/vue3-dnd-tree の Settings で、リポジトリ `uskithub/vue3-tree`、ワークフロー `release.yml`、environment なしで登録する。
+  - 登録後は `release.yml` の publish が OIDC で通るため、2FA のブラウザ認証が不要になる。
+- [ ] **T-7** `v0.2.0` の Release Notes を CHANGELOG の内容に差し替える
+  - ユーザー操作。初回の Release は `--generate-notes` で作られ、中身が無関係な過去の PR 2 件になっている。
+  - 次回以降は `release.yml` が CHANGELOG.md の該当節を使うので、この差し替えは 0.2.0 限りの後始末。
+- [ ] **T-8** 次のリリースで `release.yml` が通ることを確認する
+  - T-6 と T-7 が済んだあと、実際のパッチリリースで OIDC publish と Release Notes 生成の両方を検証する。
 
 ## 完了済み
 
 完了したマイルストーンは丸ごとここへ移す。個別タスクの完了は移さず、上のツリーで `[x]` にしておく。
 
-<!-- 例: ## マイルストーン 0: 環境構築（2026-09-20 完了） -->
+### マイルストーン 1: v0.2.0 を npm に公開する（2026-09-22 完了）
+
+- [x] **T-1** README を現行 API に追従させる → SPEC 3.3
+  - [x] T-1.1 使用例を `BaseTreenode<T>` の派生クラスに書き換える（旧 README は廃止済みの `Treenode` 型リテラルのままだった）
+  - [x] T-1.2 props に `version` を追加し、外部更新の反映手順を書く → SPEC 3.2
+  - [x] T-1.3 events を `rearrange` / `toggle-folding` / `toggle-editing` / `update-name` / `select` に差し替える（旧 README の `arrange` / `hover` / `dragenter` は実在しなかった）
+  - [x] T-1.4 slot props を `node` / `parent` / `depth` / `isHovering` / `isEditing` / `endEditing` に更新する
+  - [x] T-1.5 プラグイン登録（`createVue3Tree` / `app.use`）とスタイル・mdi の読み込み手順を追記する
+- [x] **T-2** 公開する API を確定させる → SPEC 3.3
+  - [x] T-2.1 後方互換 export（`tree`）を削除する（D-6）
+  - [x] T-2.2 デバッグ用 `console.log` を除去する（`src/tree.vue`、`src/treenode.ts`）
+  - [x] T-2.3 "modification has not reflected." 表示を開発用と判断して削除する（D-7）
+  - [x] T-2.4 グローバル登録名を `Vue3Tree` / `Vue3Treenode` に統一する（D-8）。併せて、型拡張が `dist/types` に含まれず利用側で効いていなかった問題を `src/index.ts` への移動で解消
+- [x] **T-3** ビルドと型定義の出力を検証する → SPEC 2.2
+  - [x] T-3.1 `yarn build` を通し、`dist/types` の出力内容を確認する
+  - [x] T-3.2 外部プロジェクトから ESM / UMD 双方で import し、型が効くことを確認する（`node_modules` に自身へのリンクを張った consumer で検証）
+  - [x] T-3.3 `tree.vue` に `defineSlots` を追加し、`d.ts` の `slots` が `{}` になる問題を直す（T-3.2 で発見。R-7 が TypeScript 利用者に対して満たせていなかった）
+- [x] **T-4** テストを通る状態にする → SPEC 2.1
+  - [x] T-4.1 テストを通す（スナップショット更新は不要だった）
+  - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
+- [x] **T-5** 公開する → SPEC 2.2
+  - [x] T-5.1 version を 0.2.0 にする（D-9）
+  - [x] T-5.2 npm に publish する（`vue3-dnd-tree@0.2.0`）。npm の `vue3-tree` が別プロジェクトのものだったため改名した（D-10）
+  - [x] T-5.3 `v0.2.0` タグを push する（`release.yml` が動き、publish はスキップされ GitHub Release が作られた）
+  - [x] T-5.4 LICENSE ファイルを追加する（Apache-2.0 の公式全文、`Copyright 2023 Yusuke SAITO`）
+  - [x] T-5.5 公開物を整理する（`.d.ts.map` の生成を止め、`tsbuildinfo` を `dist/` の外へ。`.js.map` は `sourcesContent` を持つので残す。47.2kB / unpacked 173.3kB）
+  - [x] T-5.6 CHANGELOG.md を作る
+  - [x] T-5.7 CI と Release のワークフローを置く（D-11）。`test:run` と `typecheck:test` の script も追加
 
 ## 気づいたこと
 
@@ -60,4 +71,4 @@
 - イベントとスロットに渡るノードは内部コピー（`InnerTreenode`）で、利用側クラスで定義したメソッドを持たない。一方、公開型 `TreeEventHandlers<U, T>` は `T` が渡る形になっており、型と実体がずれている。README には実態を注記した。
 - happy-dom は `Element.animate` を持たず、`getComputedStyle` の戻り値が iterable でなく、レイアウトも持たない。そのため `rearrange` のテストはこの 3 つのスタブ前提になっている。ドロップ位置の計算そのものは検証できているが、実ブラウザでの挙動は sandbox で目視確認するしかない。
 - `package.json` の scripts は `yarn` 前提（`prepublishOnly: "yarn build"` など）。この環境は corepack 経由でしか yarn を呼べず PATH に無いため、`npm publish` が走らせる `prepublishOnly` が `sh: yarn: command not found` で落ちる。ローカルから publish する場合は `corepack yarn build` を先に済ませて `--ignore-scripts` を付ける。CI は `corepack enable` 済みなので影響しない。
-- npm の 2FA をセキュリティキー（WebAuthn）にしているため、`npm publish` は 6 桁コードではなくブラウザ認証を要求する。非対話のシェルから実行すると `EOTP` で即座に落ちるので、リリースを人手でやる場合は対話ターミナルから実行する。Trusted Publishing に移れば不要になる。
+- npm の 2FA をセキュリティキー（WebAuthn）にしているため、`npm publish` は 6 桁コードではなくブラウザ認証を要求する。非対話のシェルから実行すると `EOTP` で即座に落ちる。T-6 が済めば人手の publish は不要になる。

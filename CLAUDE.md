@@ -1,4 +1,4 @@
-# vue3-tree
+# vue3-dnd-tree
 
 Vue 3 / Vuetify 3 向けの、ドラッグ&ドロップで並べ替えできるツリーコンポーネントを提供するライブラリ。
 
@@ -42,4 +42,5 @@ yarn build        # typecheck → dist 削除 → vite build → 型定義出力
 - `tree.vue` の slot 型は `defineSlots` で明示する。`useSlots()` だけだと生成される `d.ts` の `slots` が `{}` になり、利用側の `#default` が型エラーになる（テンプレートからは推論されない）。
 - グローバル登録用の型（`GlobalComponents` の拡張）は `src/index.ts` に直接書く。独立した `.d.ts` に置くと vue-tsc が再出力しないため `dist/types` に含まれず、利用側で型が効かない。エラーも出ないので気づけない。
 - `dist/` は生成物。直接編集しない。生成元は `src/`。
+- npm の公開名は `vue3-dnd-tree`、GitHub のリポジトリ名は `vue3-tree`。npm の `vue3-tree` は無関係の別プロジェクトが保持している（D-10）。
 - ライブラリなので `vue` / `vuetify` は external。`src/` から `vuetify` を import しない（CSS 変数 `--v-theme-*` の参照に留める）。`@mdi/font` の CSS は利用側で import させる。
