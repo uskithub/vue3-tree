@@ -13,20 +13,19 @@
 
 ## 現在のフォーカス
 
-**T-6** — Trusted Publisher を登録する
+**T-8** — 次のリリースで `release.yml` が通ることを確認する
 
 ## マイルストーン 2: リリース運用を仕上げる
 
 0.2.0 は手作業が残った状態で出た。次のリリースを `git tag` だけで完結させる。
 
-- [ ] **T-6** npm に Trusted Publisher を登録する → SPEC D-11
-  - ユーザー操作。https://www.npmjs.com/package/vue3-dnd-tree の Settings で、リポジトリ `uskithub/vue3-tree`、ワークフロー `release.yml`、environment なしで登録する。
-  - 登録後は `release.yml` の publish が OIDC で通るため、2FA のブラウザ認証が不要になる。
-- [ ] **T-7** `v0.2.0` の Release Notes を CHANGELOG の内容に差し替える
-  - ユーザー操作。初回の Release は `--generate-notes` で作られ、中身が無関係な過去の PR 2 件になっている。
-  - 次回以降は `release.yml` が CHANGELOG.md の該当節を使うので、この差し替えは 0.2.0 限りの後始末。
+- [x] **T-6** npm に Trusted Publisher を登録する → SPEC D-11（2026-09-22、ユーザーが実施）
+  - 設定状態は registry のメタデータに出ないため、実際に publish するまで検証できない（→ T-8）。
+- [x] **T-7** `v0.2.0` の Release Notes を CHANGELOG の内容に差し替える（2026-09-22、ユーザーが実施）
+  - 破壊的変更 2 件と before/after のコード例が載っていることを確認済み。
 - [ ] **T-8** 次のリリースで `release.yml` が通ることを確認する
-  - T-6 と T-7 が済んだあと、実際のパッチリリースで OIDC publish と Release Notes 生成の両方を検証する。
+  - 検証したいのは 3 点: Trusted Publishing による OIDC publish、`CHANGELOG.md` からの Release Notes 生成、`--provenance` の署名。
+  - 0.2.0 は手動 publish だったため provenance が付いていない。Actions から出す最初のリリースで付く。
 
 ## 完了済み
 
