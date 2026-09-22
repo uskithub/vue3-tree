@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 version stays below 1.0.0, breaking changes ship in minor releases — see D-9 in
 [docs/SPEC.md](./docs/SPEC.md).
 
-## [0.2.0] - unreleased
+## [0.2.0] - 2026-09-22
 
 ### Changed
 

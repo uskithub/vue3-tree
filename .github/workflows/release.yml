@@ -46,8 +46,18 @@ jobs:
 
       - run: yarn test:run
 
-      # prepublishOnly が yarn build を走らせる。--provenance で来歴を署名する
-      - run: npm publish --provenance --access public
+      # prepublishOnly が yarn build を走らせる。--provenance で来歴を署名する。
+      # そのバージョンが既に registry にある場合はスキップする（0.2.0 は Trusted
+      # Publisher を登録できない初回だったため手動で publish した）。
+      - name: Publish to npm unless the version is already there
+        run: |
+          name="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          if npm view "${name}@${version}" version > /dev/null 2>&1; then
+            echo "${name}@${version} is already published; skipping"
+          else
+            npm publish --provenance --access public
+          fi
 
       - name: Create the GitHub Release
         env:
