@@ -13,7 +13,7 @@
 
 ## 現在のフォーカス
 
-**T-8** — 次のリリースで `release.yml` が通ることを確認する
+**T-8** — 待ち。次に中身のある変更をリリースするときに検証する
 
 ## マイルストーン 2: リリース運用を仕上げる
 
@@ -26,6 +26,8 @@
 - [ ] **T-8** 次のリリースで `release.yml` が通ることを確認する
   - 検証したいのは 3 点: Trusted Publishing による OIDC publish、`CHANGELOG.md` からの Release Notes 生成、`--provenance` の署名。
   - 0.2.0 は手動 publish だったため provenance が付いていない。Actions から出す最初のリリースで付く。
+  - 検証のためだけに 0.2.1 を出すことは見送った（2026-09-22）。次に中身のある変更を出すときに一緒に確認する。
+  - リリース手順: CHANGELOG.md に節を足す → `package.json` の version を上げる → コミット → `git tag -a vX.Y.Z -m vX.Y.Z` → `git push origin master --follow-tags`。以降は `release.yml` が publish と GitHub Release を行う。
 
 ## 完了済み
 
