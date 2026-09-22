@@ -1,6 +1,6 @@
 # TASK TREE — vue3-tree
 
-最終更新: 2026-09-20
+最終更新: 2026-09-22
 
 作業の現在地。タスクの状態が変わったら、そのターンのうちにここを更新する。
 
@@ -27,6 +27,7 @@
   - [x] T-2.1 `src/index.ts` の後方互換 export（`tree`）を残すか決める。残すなら README に書き、消すなら破壊的変更として記録する
   - [x] T-2.2 デバッグ用 `console.log` を除去する（`src/tree.vue`、`src/treenode.ts`）
   - [x] T-2.3 `.subtree.modified:before` の "modification has not reflected." 表示が仕様か開発用かを決める → SPEC 2.1
+  - [x] T-2.4 グローバル登録名を `Vue3Tree` / `Vue3Treenode` に統一する（2026-09-22、D-8）。併せて、型拡張が `dist/types` に含まれず利用側で効いていなかった問題を `src/index.ts` への移動で解消
 - [x] **T-3** ビルドと型定義の出力を検証する → SPEC 2.2
   - [x] T-3.1 `yarn build` を通し、`dist/types` の出力内容を確認する
   - [x] T-3.2 外部プロジェクトから ESM / UMD 双方で import し、型が効くことを確認する（`node_modules/vue3-tree` を自身へのリンクにした consumer で検証。props・events・slot すべて型が効くこと、ESM / UMD の export が一致することを確認）
@@ -38,6 +39,8 @@
   - [ ] T-5.1 `package.json` の version を 0.2.0 にする
   - [ ] T-5.2 `npm publish`（`prepublishOnly` で build が走る）
   - [ ] T-5.3 git tag と GitHub release を作る
+  - [ ] T-5.4 LICENSE ファイルを追加する（`package.json` は Apache-2.0 を宣言しているが実ファイルが無く、公開物にも入らない）
+  - [ ] T-5.5 公開物から不要なものを外す（`npm pack` で確認。`dist/tsconfig.build-types.tsbuildinfo` が同梱される。`.js.map` / `.d.ts.map` は `src/` を同梱していないため参照先が無く、98kB がパッケージ 179kB の過半を占める）
 
 ## 完了済み
 

@@ -1,6 +1,6 @@
 # SPEC — vue3-tree
 
-最終更新: 2026-09-20
+最終更新: 2026-09-22
 
 このファイルは仕様の Single Source of Truth。実装がここと食い違ったら、どちらが正しいかを決めてから直す。黙って実装に合わせない。
 
@@ -90,6 +90,13 @@ default slot props:
 { node, parent, depth, isHovering, isEditing, endEditing(shouldCommit: boolean) }
 ```
 
+プラグインが登録するコンポーネント名（既定）:
+
+- `Vue3Tree` — ルート。利用側が使うのはこれだけ
+- `Vue3Treenode` — 再帰描画用の内部コンポーネント
+
+`createVue3Tree({ components: { tree, treenode } })` で変更できる。直接 import する場合の export 名は `VTree` / `VTreenode` で、こちらは import 時にリネームできるため名前空間を占有しない。
+
 ## 4. 決定記録
 
 **ここがこのファイルで最も価値のある節。** 採用した案だけでなく、却下した案とその理由を残す。
@@ -151,6 +158,16 @@ default slot props:
 - 却下した案: 文言とスタイルを整えて機能として残す — `version` の更新漏れは利用側のコードの問題であり、画面に出すより型と README で防ぐ方が筋が良い。
 - 覆す条件: 更新漏れの問い合わせが実際に増えた場合。その際は開発用の prop として復活させる。
 
+### D-8: グローバル登録名は `Vue3Tree` / `Vue3Treenode` にする
+
+- 日付: 2026-09-22
+- 決定: プラグインの既定登録名と `GlobalComponents` 宣言を `Vue3Tree` / `Vue3Treenode` に揃える。直接 import 用の export 名は `VTree` / `VTreenode` のまま残す。型拡張は `src/index.ts` に直接書く。
+- 理由: 既定登録名（`tree` / `treenode`）と型宣言（`VTree` / `VTreenode`）が食い違っており、`<VTree>` はテンプレートで解決できなかった。揃える先として `V*` は Vuetify の名前空間（3.11.8 時点で labs に `VTreeview` があり、将来 `VTree` が追加される余地がある）なので避け、パッケージ名由来の接頭辞にした。export 名は import 時にリネームできて名前空間を占有しないため変えない。
+- 却下した案: 型宣言を `tree` / `treenode` に合わせる — 変更は 2 行で済むが、`tree` という一般名をグローバルに占有するのはライブラリとして行儀が悪い。`VTree` / `VTreenode` に実装を合わせる — Vue の慣習には沿うが、Vuetify と名前を取り合う。
+- 影響: 破壊的変更。`<tree>` / `<treenode>` は使えなくなる。
+- 覆す条件: Vuetify が `Vue3*` を使い始めた場合。
+- 付随して判明したこと: `src/global.d.ts` のような自作の `.d.ts` は vue-tsc が再出力しないため `dist/types` に含まれず、型拡張が配布されていなかった。`index.d.ts` には解決できない `import "./global.d.ts"` が残っていた。`index.ts` に直接書くことで両方解消した。
+
 ## 5. 未決事項
 
 決まっていないことを明示する。ここにある項目は実装してはいけない。
@@ -159,4 +176,3 @@ default slot props:
 - [ ] アクセシビリティ（キーボード操作 / ARIA tree role）を将来スコープに入れるか。入れるなら D&D 以外の並べ替え手段が必要になる。
 - [ ] `select` の対象が単一ノードのままでよいか（複数選択の需要が出たら 1.3 の見直し）。
 - [ ] 公開時のバージョニング方針（0.x のまま破壊的変更を許容するか、semver を厳密に守るか）。
-- [ ] `src/global.d.ts` の `GlobalComponents` 宣言（`VTree` / `VTreenode`）と、プラグインが実際に登録する名前（`tree` / `treenode`）の不一致をどちらに揃えるか。現状、テンプレートの `<VTree>` は解決されない。

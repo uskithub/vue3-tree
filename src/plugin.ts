@@ -14,7 +14,7 @@ const VTreenodeComponent: Component = VTreenode;
 export interface Vue3TreePluginOptions {
   /**
    * Custom component names
-   * @default { tree: 'VTree', treenode: 'VTreenode' }
+   * @default { tree: 'Vue3Tree', treenode: 'Vue3Treenode' }
    */
   components?: {
     tree?: string;
@@ -43,8 +43,8 @@ export interface Vue3TreePluginOptions {
  */
 export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin<[]> {
   const { components = {} } = options;
-  const treeName = components.tree ?? "tree";
-  const treenodeName = components.treenode ?? "treenode";
+  const treeName = components.tree ?? "Vue3Tree";
+  const treenodeName = components.treenode ?? "Vue3Treenode";
 
   return {
     install(app: App) {
@@ -70,7 +70,7 @@ export function createVue3Tree(options: Vue3TreePluginOptions = {}): Plugin<[]> 
  */
 export const Vue3TreePlugin: Plugin<[]> = {
   install(app: App) {
-    app.component("tree", VTreeComponent);
-    app.component("treenode", VTreenodeComponent);
+    app.component("Vue3Tree", VTreeComponent);
+    app.component("Vue3Treenode", VTreenodeComponent);
   },
 };

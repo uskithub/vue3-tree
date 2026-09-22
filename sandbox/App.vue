@@ -214,7 +214,7 @@ const handlers: TreeEventHandlers<MyContent, MyTreenode> = {
 main
   button(@click="onClick") toggle contents
   h1 default
-  tree(
+  Vue3Tree(
     :node="state.treeContent"
     :version="state.version"
     @rearrange="handlers['rearrange']"
@@ -225,7 +225,7 @@ main
   textarea(:value="JSON.stringify(state.treeContent, null, 2)" readonly)
   
   h1 using slot
-  tree(
+  Vue3Tree(
     :node="state.treeContent"
     :version="state.version"
     @rearrange="handlers['rearrange']"

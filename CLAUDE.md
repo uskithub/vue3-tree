@@ -40,5 +40,6 @@ yarn build        # typecheck → dist 削除 → vite build → 型定義出力
 - ドラッグ中は mirage（ドラッグ元の li のクローン）が DOM に挿入され、`data-id` が重複する。`data-id` で要素を引くコードやテストは、`.mirage` を除外するか、ドラッグ開始前に掴んだ参照を使う。
 - template は pug。`@vue/language-plugin-pug` 経由で vue-tsc が読むため、pug をやめると型定義の出力が壊れる。
 - `tree.vue` の slot 型は `defineSlots` で明示する。`useSlots()` だけだと生成される `d.ts` の `slots` が `{}` になり、利用側の `#default` が型エラーになる（テンプレートからは推論されない）。
+- グローバル登録用の型（`GlobalComponents` の拡張）は `src/index.ts` に直接書く。独立した `.d.ts` に置くと vue-tsc が再出力しないため `dist/types` に含まれず、利用側で型が効かない。エラーも出ないので気づけない。
 - `dist/` は生成物。直接編集しない。生成元は `src/`。
 - ライブラリなので `vue` / `vuetify` は external。`src/` から `vuetify` を import しない（CSS 変数 `--v-theme-*` の参照に留める）。`@mdi/font` の CSS は利用側で import させる。

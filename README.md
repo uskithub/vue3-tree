@@ -35,11 +35,12 @@ app.use(createVue3Tree());
 app.mount("#app");
 ```
 
-This registers two global components, `tree` and `treenode`. You only use `tree`;
-`treenode` is the recursive child it renders. Pass options to rename them:
+This registers two global components, `Vue3Tree` and `Vue3Treenode`. You only use
+`Vue3Tree`; `Vue3Treenode` is the recursive child it renders. Pass options to rename
+them:
 
 ```ts
-app.use(createVue3Tree({ components: { tree: "VTree", treenode: "VTreenode" } }));
+app.use(createVue3Tree({ components: { tree: "MyTree", treenode: "MyTreenode" } }));
 ```
 
 The default export is the same plugin with the default names, so `app.use(Vue3Tree)`
@@ -147,7 +148,7 @@ const handlers: TreeEventHandlers<Task, TaskNode> = {
 </script>
 
 <template>
-  <tree
+  <Vue3Tree
     :node="state.root"
     :version="state.version"
     @rearrange="handlers['rearrange']"
@@ -204,7 +205,7 @@ type SlotProps = {
 ```
 
 ```vue
-<tree :node="state.root" :version="state.version">
+<Vue3Tree :node="state.root" :version="state.version">
   <template v-slot="slotProps">
     <input
       v-if="slotProps.isEditing"
@@ -213,7 +214,7 @@ type SlotProps = {
     />
     <span v-else>{{ slotProps.node.name }}</span>
   </template>
-</tree>
+</Vue3Tree>
 ```
 
 `endEditing(true)` commits the edited name and emits `update-name`; `endEditing(false)`
