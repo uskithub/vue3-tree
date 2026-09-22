@@ -37,10 +37,11 @@
   - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
 - [ ] **T-5** 公開する → SPEC 2.2
   - [x] T-5.1 `package.json` の version を 0.2.0 にする（2026-09-22、D-9）
-  - [ ] T-5.2 `npm publish`（`prepublishOnly` で build が走る）
+  - [!] T-5.2 `npm publish`（`prepublishOnly` で build が走る）— ブロック理由: npm の `vue3-tree` は別人（teamseodo）のパッケージで、0.11.5 まで公開済み。この名前では publish できない。パッケージ名を決め直す必要がある（`@uskithub/vue3-tree`、`@jibunstyle/vue3-tree`、`vue3-draggable-tree`、`vue3-dnd-tree` はいずれも空き）。加えて npm に未ログイン
   - [ ] T-5.3 git tag と GitHub release を作る
   - [ ] T-5.4 LICENSE ファイルを追加する（`package.json` は Apache-2.0 を宣言しているが実ファイルが無く、公開物にも入らない）
   - [ ] T-5.5 公開物から不要なものを外す（`npm pack` で確認。`dist/tsconfig.build-types.tsbuildinfo` が同梱される。`.js.map` / `.d.ts.map` は `src/` を同梱していないため参照先が無く、98kB がパッケージ 179kB の過半を占める）
+  - [x] T-5.6 CHANGELOG.md を作る（2026-09-22。0.2.0 は unreleased のまま。publish 時に日付を入れる）
 
 ## 完了済み
 
