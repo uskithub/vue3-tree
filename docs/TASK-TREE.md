@@ -36,7 +36,7 @@
   - [x] T-4.1 テストを通す（2026-09-20、T-2 の検証として実施。テスト 1 件パス、スナップショット更新は不要だった。`test/tree.spec.ts` の import 名のずれは T-2.1 の対応で解消済み）
   - [x] T-4.2 `rearrange` / `select` / `update-name` の振る舞いテストを追加する（`test/events.spec.ts`、7 件）
 - [ ] **T-5** 公開する → SPEC 2.2
-  - [ ] T-5.1 `package.json` の version を 0.2.0 にする
+  - [x] T-5.1 `package.json` の version を 0.2.0 にする（2026-09-22、D-9）
   - [ ] T-5.2 `npm publish`（`prepublishOnly` で build が走る）
   - [ ] T-5.3 git tag と GitHub release を作る
   - [ ] T-5.4 LICENSE ファイルを追加する（`package.json` は Apache-2.0 を宣言しているが実ファイルが無く、公開物にも入らない）

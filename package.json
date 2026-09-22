@@ -1,6 +1,6 @@
 {
   "name": "vue3-tree",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A tree component for Vue 3 and Vuetify 3 with drag and drop support",
   "main": "dist/vue3-tree.umd.js",
   "module": "dist/vue3-tree.es.js",
