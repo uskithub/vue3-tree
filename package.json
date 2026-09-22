@@ -43,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/uskithub/vue3-tree"
+    "url": "git+https://github.com/uskithub/vue3-tree.git"
   },
   "homepage": "https://github.com/uskithub/vue3-tree#readme",
   "bugs": {
