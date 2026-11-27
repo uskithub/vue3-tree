@@ -7,3 +7,4 @@ dist
 !.yarn/releases
 !.yarn/versions
 release-notes.md
+*.tgz

@@ -4,6 +4,8 @@ vue3-dnd-tree
 A tree component for Vue 3 and Vuetify 3 with drag and drop support.
 
 - Rearrange nodes by dragging: reorder among siblings, or move under another node.
+  Drop on the top or bottom edge of a row to insert before or after it, or on the middle
+  to make it a child.
 - Fold / unfold, with auto-expand while hovering a folded node during a drag.
 - Inline renaming on double click.
 - Bring your own domain model: extend `BaseTreenode<T>` instead of converting your data.

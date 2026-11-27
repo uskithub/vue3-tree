@@ -63,6 +63,7 @@ export abstract class BaseEditableTreenode<T> extends BaseTreenode<T> implements
 
 export type TreenodeEvents<T> = {
     "dragenter" : [event: DragEvent, node: T];
+    "dragover" : [event: DragEvent, node: T];
     "dragstart" : [event: DragEvent, parent: T, node: T];
     "dragend" : [event: DragEvent, node: T];
     "mouse-leave" : [event: MouseEvent, node: T];

@@ -188,6 +188,122 @@ describe("rearrange", () => {
         expect(wrapper.emitted("rearrange")).toEqual([["2", "0", "0", 0]]);
     });
 
+    // 以下、行（.tree-item）の上での振り分け（D-12）。行の高さは 20px なので、
+    // 上の端は clientY < 5、下の端は clientY >= 15、その間が真ん中。
+
+    test("行の上の端にドロップすると、その行の前の兄弟になる", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="2"]');
+        const row = wrapper.find('li[data-id="1"] > .tree-item');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+        await row.trigger("dragenter", { clientY: 2 });
+        await dragged.trigger("dragend", { clientY: 2 });
+        await flush();
+
+        expect(wrapper.emitted("rearrange")).toEqual([["2", "0", "0", 0]]);
+    });
+
+    test("行の下の端にドロップすると、その行の後ろの兄弟になる", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="11"]');
+        const row = wrapper.find('li[data-id="2"] > .tree-item');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+        await row.trigger("dragenter", { clientY: 18 });
+        await dragged.trigger("dragend", { clientY: 18 });
+        await flush();
+
+        // 11 を 1 の下から 0 の下へ。1, 2 の後ろなので index は 2
+        expect(wrapper.emitted("rearrange")).toEqual([["11", "1", "0", 2]]);
+    });
+
+    test("開いていて子のある行の下の端では、子の後ろでなく、その行の後ろの兄弟になる", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="11"]');
+        const row = wrapper.find('li[data-id="1"] > .tree-item');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+        await row.trigger("dragenter", { clientY: 18 });
+        await dragged.trigger("dragend", { clientY: 18 });
+        await flush();
+
+        // 11 を 1 の下から 0 の下へ。1 の後ろ・2 の前なので index は 1
+        expect(wrapper.emitted("rearrange")).toEqual([["11", "1", "0", 1]]);
+    });
+
+    test("行の真ん中にドロップすると、その行の子になる", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="2"]');
+        const row = wrapper.find('li[data-id="1"] > .tree-item');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+        await row.trigger("dragenter", { clientY: 10 });
+        await dragged.trigger("dragend", { clientY: 10 });
+        await flush();
+
+        expect(wrapper.emitted("rearrange")).toEqual([["2", "0", "1", 1]]);
+    });
+
+    test("同じ行の中で端と真ん中を行き来すると、ドロップ先が切り替わる", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="2"]');
+        const row = wrapper.find('li[data-id="1"] > .tree-item');
+        const parentUl = wrapper.find('ul.subtree[data-id="0"]');
+        const childUl = wrapper.find('ul.subtree[data-id="1"]');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+
+        await row.trigger("dragenter", { clientY: 2 });
+        expect(parentUl.classes()).toContain("drop-target");
+        expect(parentUl.element.children[0]!.classList.contains("mirage")).toBe(true);
+
+        await row.trigger("dragover", { clientY: 10 });
+        expect(parentUl.classes()).not.toContain("drop-target");
+        expect(childUl.classes()).toContain("drop-target");
+        expect(childUl.element.querySelector(":scope > .mirage")).not.toBeNull();
+
+        await row.trigger("dragover", { clientY: 2 });
+        expect(childUl.classes()).not.toContain("drop-target");
+        expect(parentUl.classes()).toContain("drop-target");
+
+        await dragged.trigger("dragend", { clientY: 2 });
+        await flush();
+
+        expect(wrapper.emitted("rearrange")).toEqual([["2", "0", "0", 0]]);
+    });
+
+    test("掴んでいる行のすぐ前になる位置は動かない移動で、emit されない", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="2"]');
+        const row = wrapper.find('li[data-id="1"] > .tree-item');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+        // いったん 1 の前に置いてから、1 の後ろ（= 2 のすぐ前）へ
+        await row.trigger("dragenter", { clientY: 2 });
+        await row.trigger("dragover", { clientY: 18 });
+        expect(wrapper.find(".mirage").exists()).toBe(false);
+        expect(wrapper.find(".drop-target").exists()).toBe(false);
+        await dragged.trigger("dragend", { clientY: 18 });
+        await flush();
+
+        expect(wrapper.emitted("rearrange")).toBeUndefined();
+    });
+
+    test("掴んでいる行の子孫の行の上では、ドロップ先にならない", async () => {
+        const wrapper = mountTree();
+        const dragged = wrapper.find('li[data-id="1"]');
+        const row = wrapper.find('li[data-id="11"] > .tree-item');
+
+        await dragged.trigger("dragstart", { dataTransfer: new DataTransfer() });
+        await row.trigger("dragenter", { clientY: 2 });
+        await row.trigger("dragover", { clientY: 10 });
+        await dragged.trigger("dragend", { clientY: 10 });
+        await flush();
+
+        expect(wrapper.emitted("rearrange")).toBeUndefined();
+    });
+
     test("ドロップ先が無いまま終わった場合は emit されない", async () => {
         const wrapper = mountTree();
         const dragged = wrapper.find('li[data-id="2"]');

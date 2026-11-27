@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 version stays below 1.0.0, breaking changes ship in minor releases — see D-9 in
 [docs/SPEC.md](./docs/SPEC.md).
 
+## [0.2.1] - 2026-11-27
+
+### Changed
+
+- Dropping onto a row now depends on where in the row the pointer is. The top quarter
+  inserts before that row and the bottom quarter inserts after it, both as siblings; the
+  middle still drops into the row as a child. Previously every position on a row meant
+  "child", so a drop between siblings needed a gap between rows to aim at, and was
+  impossible when the consuming app styled the gaps away. The `rearrange` payload and
+  its timing are unchanged. See D-12 in [docs/SPEC.md](./docs/SPEC.md).
+
+- The dotted frame around the drop target is drawn with `outline` instead of `border`,
+  so rows inside it no longer shift by the width of the frame. See D-13.
+
 ## [0.2.0] - 2026-09-22
 
 ### Changed

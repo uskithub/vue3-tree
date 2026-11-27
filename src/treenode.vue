@@ -23,6 +23,7 @@ const emit = defineEmits<TreenodeEvents<T>>();
 
 const handlers: TreenodeEventHandlers<T> = {
     "dragenter" : (e: DragEvent, _treenode: T) => emit("dragenter", e, _treenode)
+    , "dragover" : (e: DragEvent, _treenode: T) => emit("dragover", e, _treenode)
     , "dragstart" : (e: DragEvent, parent: T, _treenode: T) => emit("dragstart", e, parent, _treenode)
     , "dragend" : (e: DragEvent, _treenode: T) => emit("dragend", e, _treenode)
     , "mouse-leave" : (e: MouseEvent, _treenode: T) => emit("mouse-leave", e, _treenode)
@@ -53,6 +54,7 @@ ul.subtree(
       @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
       @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
       @dragenter.prevent.stop="handlers['dragenter']($event, childnode)"
+      @dragover="handlers['dragover']($event, childnode)"
       @mouseleave.stop="handlers['mouse-leave']($event, childnode)"
     )
       i.mdi(
@@ -83,6 +85,7 @@ ul.subtree(
       :depth="props.depth+1"
       :endEditingClosureBuilder="props.endEditingClosureBuilder"
       @dragenter="handlers['dragenter']"
+      @dragover="handlers['dragover']"
       @dragstart="handlers['dragstart']"
       @dragend="handlers['dragend']"
       @mouse-leave="handlers['mouse-leave']"

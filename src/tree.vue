@@ -171,6 +171,33 @@ watch(() => props.version, () => {
     state.isModified = false;
 });
 
+/** 行の上下の端として扱う幅（行の高さに対する割合）。D-12 */
+const ROW_EDGE_RATIO = 0.25;
+
+/** 行（.tree-item）のハンドラが落とし先を決めた dragover。落とし先の UL 側の onDragover では処理しない。 */
+const handledByRow = new WeakSet<Event>();
+
+/**
+ * 行の中でのポインタの位置を返します。上の端は "before"、下の端は "after"、それ以外は "inside"。
+ * @param row
+ * @param y
+ */
+const getRowZone = (row: HTMLElement, y: number): "before" | "inside" | "after" => {
+    const rect = row.getBoundingClientRect();
+    const edge = rect.height * ROW_EDGE_RATIO;
+    if (y < rect.top + edge) return "before";
+    if (y >= rect.bottom - edge) return "after";
+    return "inside";
+};
+
+/** 現在のドロップターゲットを解除します。 */
+const clearDropTarget = () => {
+    if (state.draggingOn === null) return;
+    state.draggingOn.elem.classList.remove("drop-target");
+    state.draggingOn.elem.removeEventListener("dragover", onDragover);
+    state.draggingOn = null;
+};
+
 /**
  * drag している要素がホバーしている siblings が変わった場合に mirage を移動させ state の siblings を更新します。
  * @param e 
@@ -180,6 +207,9 @@ const onDragover = (e: DragEvent) => {
         , y = e.clientY;
 
     if (state.dragging === null) return;
+
+    // 行（.tree-item）が落とし先を決めた dragover は、ここで位置を決め直さない（D-12）
+    if (handledByRow.has(e)) return;
 
     // dragenterした対象がmirage（drop targetの虚像）または自身（dragging）の子孫のULの場合は何もしない
     if (isMyselfOrDescendant(elem, state.dragging.mirage) || isMyselfOrDescendant(elem, state.dragging.elem)) return;
@@ -294,6 +324,118 @@ const handleSubtreeDragEnter = (
     state.draggingOn.siblings = siblings;
 }
 
+/** 畳まれたノードの自動展開の予約を、まだ開かれていなければ取り消します。 */
+const cancelTemporarilyOpen = () => {
+    if (state.temporarilyOpen && state.temporarilyOpen.node.isFolding) {
+        clearTimeout(state.temporarilyOpen.timerId);
+        state.temporarilyOpen = null;
+    }
+};
+
+/**
+ * 行（.tree-header / .tree-item）への dragenter / dragover を処理します。（D-12）
+ * - 行の上下の端: 親の UL をドロップターゲットにし、mirage をその行の前／後ろへ挿入する
+ * - 行の真ん中: その行の子の UL をドロップターゲットにする（畳まれていれば一定時間後に展開する）
+ * ルートの行（.tree-header）は親を持たないので、常に真ん中として扱う。
+ * @param e
+ * @param node イベントを発火させた行の node
+ */
+const handleRowDrag = (e: DragEvent, node: InnerTreenode<T>) => {
+    const row = e.currentTarget as HTMLElement
+        , li = row.parentElement;
+
+    if (state.dragging === null || li === null) return;
+
+    // 自身、および自身の子孫の行の場合は何もしない
+    // （mirage は cloneNode で作るためリスナを持たず、ここには来ない）
+    if (state.dragging.node.id === node.id || state.dragging.elem.contains(row)) return;
+
+    const zone = row.classList.contains("tree-item") ? getRowZone(row, e.clientY) : "inside";
+
+    if (zone === "inside") {
+        const subtree = li.querySelector(":scope > ul.subtree") as HTMLElement | null;
+
+        if (!node.isFolding) {
+            // 既に開いているなら、直下の ul.subtree に対する処理を直接呼ぶ
+            if (subtree) {
+                handledByRow.add(e);
+                // dragover は繰り返し発火するので、既にこの UL がドロップターゲットなら何もしない
+                if (e.type === "dragover" && state.draggingOn?.elem === subtree) return;
+                handleSubtreeDragEnter(subtree, e.clientY, node);
+            }
+        } else {
+            // 子要素がない場合は何もしない
+            if (node.subtrees.length < 1) return;
+            // 既に setTimeout 設定済の場合も何もしない
+            if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return;
+            // 別のノードの予約が残っていたら取り消す
+            cancelTemporarilyOpen();
+            state.temporarilyOpen = { 
+                node
+                , timerId: window.setTimeout(() => {
+                    if (state.temporarilyOpen) {
+                        state.temporarilyOpen.node.isFolding = false;
+                        emit("toggle-folding", state.temporarilyOpen.node.id);
+                        state.temporarilyOpen = null;
+                        if (subtree) {
+                            handleSubtreeDragEnter(subtree, e.clientY, node);
+                        }
+                    }
+                }, 800) 
+            };
+        }
+        return;
+    }
+
+    // 以下、行の上下の端
+
+    // 真ん中から端へ出たら、この行の自動展開の予約は取り消す
+    if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) cancelTemporarilyOpen();
+
+    const parentUl = li.parentElement
+        , parentId = parentUl?.dataset.id;
+    if (!parentUl || parentId === undefined || !parentUl.classList.contains("subtree")) return;
+    const parentNode = findNodeById<U, InnerTreenode<T>>(parentId, state.tree);
+    if (parentNode === null) return;
+
+    handledByRow.add(e);
+
+    const mirage = state.dragging.mirage
+        , dragged = state.dragging.elem;
+
+    // mirage を除いた、挿入位置の隣（before なら前、after なら後ろ）の要素
+    let neighbor = zone === "before" ? li.previousElementSibling : li.nextElementSibling;
+    const isPlaced = neighbor === mirage;
+    if (neighbor === mirage) {
+        neighbor = zone === "before" ? mirage.previousElementSibling : mirage.nextElementSibling;
+    }
+
+    if (neighbor === dragged) {
+        // 掴んでいる行のすぐ前・すぐ後ろは動かない移動なので、ドロップターゲットを解除
+        if (mirage.parentNode) mirage.parentNode.removeChild(mirage);
+        clearDropTarget();
+        return;
+    }
+
+    if (state.draggingOn === null || state.draggingOn.elem !== parentUl) {
+        clearDropTarget();
+        parentUl.classList.add("drop-target");
+        state.dragging.overlay.classList.add("out-of-scope");
+        parentUl.addEventListener("dragover", onDragover);
+        state.draggingOn = { elem: parentUl, id: parentId, node: parentNode, siblings: null };
+    }
+
+    // 既にmirageがある場合は何もしない
+    if (isPlaced) return;
+
+    // mirageを挿入（insertBefore は既に挿入済みの mirage を移動させる）
+    const siblings: [HTMLElement | null, HTMLElement | null] = zone === "before"
+        ? [li.previousElementSibling as HTMLElement | null, li]
+        : [li, li.nextElementSibling as HTMLElement | null];
+    parentUl.insertBefore(mirage, siblings[1]);
+    state.draggingOn.siblings = siblings;
+};
+
 const onDocumentClick = (e: MouseEvent) => {
     e.preventDefault();
     emit("select", undefined);
@@ -304,6 +446,7 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
     /**
      * dragstgartで作成したmirageを、dragenterしたULの子要素として挿入します。
      * 兄弟要素間での挿入位置はマウスポインタの位置によって決定します。
+     * 行に dragenter した場合は、行の上下の端なら兄弟として、真ん中なら子として挿入します。（D-12）
      * foldingしているノードに対しては、一定時間ドラッグオーバーした場合に自動で展開します。
      * 
      * ※ 対象のelemのcontentが空の場合、paddingなどで領域がないとenterしないので注意
@@ -318,39 +461,19 @@ const handlers: TreenodeEventHandlers<InnerTreenode<T>> = {
             sourceElem.classList.contains("tree-header")
             || sourceElem.classList.contains("tree-item")
         ) {
-            const li = sourceElem.parentElement
-                , subtree = li?.querySelector(":scope > ul.subtree") as HTMLElement | null;
-            
-            // 自身の場合は何もしない
-            if (state.dragging && state.dragging.node.id === node.id) return;
-
-            if (!node.isFolding) {
-                // 既に開いているなら、直下の ul.subtree に対する処理を直接呼ぶ
-                if (subtree) {                
-                    handleSubtreeDragEnter(subtree, e.clientY, node);
-                }
-            } else {
-                // 子要素がない場合は何もしない
-                if (node.subtrees.length < 1) return;
-                // 既に setTimeout 設定済の場合も何もしない
-                if (state.temporarilyOpen && state.temporarilyOpen.node.id === node.id) return;
-                state.temporarilyOpen = { 
-                    node
-                    , timerId: window.setTimeout(() => {
-                        if (state.temporarilyOpen) {
-                            state.temporarilyOpen.node.isFolding = false;
-                            emit("toggle-folding", state.temporarilyOpen.node.id);
-                            state.temporarilyOpen = null;
-                            if (subtree) {
-                                handleSubtreeDragEnter(subtree, e.clientY, node);
-                            }
-                        }
-                    }, 800) 
-                };
-            }
+            handleRowDrag(e, node);
         } else if (sourceElem.classList.contains("subtree")) {
             handleSubtreeDragEnter(sourceElem, e.clientY, node);
         }
+    }
+    ,
+    /**
+     * 行の上で dragover している間、行の中の位置（上下の端／真ん中）に応じてドロップ先を切り替えます。（D-12）
+     * @param e 
+     * @param node イベントを発火させた行の node
+     */
+    "dragover" : (e: DragEvent, node: InnerTreenode<T>) => {
+        handleRowDrag(e, node);
     }
     ,
     /**
@@ -614,6 +737,7 @@ ul.tree(
           @mouseover.prevent.stop="handlers['hover']($event, childnode.id, true)"
           @mouseout.prevent.stop="handlers['hover']($event, childnode.id, false)"
           @dragenter.prevent.stop="handlers['dragenter']($event, childnode)"
+          @dragover="handlers['dragover']($event, childnode)"
           @mouseleave.stop="handlers['mouse-leave']($event, childnode)"
         )
           i.mdi(
@@ -644,6 +768,7 @@ ul.tree(
           :depth="2"
           :endEditingClosureBuilder="endEditingClosureBuilder"
           @dragenter="handlers['dragenter']"
+          @dragover="handlers['dragover']"
           @dragstart="handlers['dragstart']"
           @dragend="handlers['dragend']"
           @mouse-leave="handlers['mouse-leave']"
@@ -725,8 +850,10 @@ ul.tree(
         margin: 0
         min-height: 7px
 
+      // border だと枠の太さの分だけ中の行がずれるので outline で描く（D-13）
       &.drop-target
-        border: 3px dotted #888
+        outline: 3px dotted #888
+        outline-offset: -3px
 
       li:has(> ul.subtree.drop-target)
         background-color: #fff
