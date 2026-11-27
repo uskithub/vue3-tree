@@ -13,7 +13,7 @@
 
 ## 現在のフォーカス
 
-**T-8** — ブロック中。`v0.2.1` の `release.yml` が npm publish で E404 になった。npm 側の Trusted Publisher の設定をユーザーが確認する
+なし — `vue3-dnd-tree@0.2.1` を公開済み（2026-11-27）。マイルストーン 2・3 は完了
 
 ## マイルストーン 2: リリース運用を仕上げる
 
@@ -23,25 +23,26 @@
   - 設定状態は registry のメタデータに出ないため、実際に publish するまで検証できない（→ T-8）。
 - [x] **T-7** `v0.2.0` の Release Notes を CHANGELOG の内容に差し替える（2026-09-22、ユーザーが実施）
   - 破壊的変更 2 件と before/after のコード例が載っていることを確認済み。
-- [!] **T-8** 次のリリースで `release.yml` が通ることを確認する
+- [x] **T-8** 次のリリースで `release.yml` が通ることを確認する
   - 検証したいのは 3 点: Trusted Publishing による OIDC publish、`CHANGELOG.md` からの Release Notes 生成、`--provenance` の署名。
   - 0.2.0 は手動 publish だったため provenance が付いていない。Actions から出す最初のリリースで付く。
   - 検証のためだけに 0.2.1 を出すことは見送った（2026-09-22）。次に中身のある変更を出すときに一緒に確認する。
   - 2026-11-27: `v0.2.1` で初めて Actions から publish を試み、失敗した（run 45966646283）。typecheck・テスト・ビルド・CHANGELOG からのノート抽出・provenance の署名までは通り、最後の `PUT https://registry.npmjs.org/vue3-dnd-tree` が `E404 Not Found`。npm は 11.21.3、`id-token: write` あり。直前に「npm tokens that bypass 2FA …」の notice が出ているので、OIDC の交換が成立せず、setup-node が置くダミーの `NODE_AUTH_TOKEN` で PUT したと見ている（推測。ログに OIDC の交換結果は出ていない）。
-  - ブロックの理由: npm 側の Trusted Publisher の登録内容（owner `uskithub` / repository `vue3-tree` / workflow `release.yml` / environment 空）が合っているかは npmjs.com の設定画面でしか見られない。ユーザーの確認が要る。直したら `gh run rerun 45966646283` で同じタグのまま再実行できる（npm に 0.2.1 は無く、GitHub Release も未作成）。
-  - 現状: `v0.2.1` のタグは push 済み。npm の最新は 0.2.0 のまま。
+  - 原因: npm 側の Trusted Publisher の登録が Expired になっていた。加えて owner が `uskithb`（`u` が 1 つ足りない）で、許可が `npm stage publish` だけだった。ユーザーが削除して登録し直した（`uskithub` / `vue3-tree` / `release.yml` / environment 空、Allow npm publish にチェック）。
+  - 2026-11-27: `gh run rerun 45966646283` で同じタグのまま再実行し、成功。3 点とも確認済み: OIDC での publish（`+ vue3-dnd-tree@0.2.1`）、CHANGELOG の節からの Release Notes、provenance（registry の `dist.attestations` あり）。registry に反映されるまで 2 分ほどかかった。
+  - 次に失敗したら、まず npmjs.com の Trusted Publisher の Status（Expired になっていないか）と Allowed actions を見る。
   - リリース手順: CHANGELOG.md に節を足す → `package.json` の version を上げる → コミット → `git tag -a vX.Y.Z -m vX.Y.Z` → `git push origin master --follow-tags`。以降は `release.yml` が publish と GitHub Release を行う。
 
 ## マイルストーン 3: 兄弟の間へ落とせるようにする
 
 Inspector（v0.2.0 の利用側）で「兄弟の間へドロップできない」ことが再現した。R-2 を満たすよう直す。
 
-- [~] **T-9** 行の上下の端は兄弟、真ん中は子として落とす → SPEC D-12 / R-2
+- [x] **T-9** 行の上下の端は兄弟、真ん中は子として落とす → SPEC D-12 / R-2
   - [x] T-9.1 `tree.vue` に行のゾーン判定を入れ、`tree.vue` / `treenode.vue` の両方の行に `dragover` を配線する（2026-11-27）
   - [x] T-9.2 振る舞いテストを追加する（`test/events.spec.ts`、7 件）。sandbox を Chrome で開き、実レイアウト上で合成した DragEvent でも確認した（実際のマウス操作でのドラッグは未確認）
   - [x] T-9.5 ドロップターゲットの枠で行をずらさない → SPEC D-13（2026-11-27。T-9.3 のユーザー確認で見つかった。点線を outline にした。兄弟の mirage を差し込み線にする案はいったん実装したが、ユーザーの判断で取り下げ、行の写しのままにした。上の端で行が mirage の分だけ下へ動くのは許容）
   - [x] T-9.3 ローカルのビルド成果物（tgz）を Inspector 側へ渡し、ユーザーが実ブラウザで確認する（2026-11-27。確認を受けて T-9.5 を行った）
-  - [!] T-9.4 0.2.1 としてリリースする（2026-11-27。version と CHANGELOG を確定し、`v0.2.1` を push。npm への publish は T-8 のブロックで未了）
+  - [x] T-9.4 0.2.1 としてリリースする（2026-11-27。`vue3-dnd-tree@0.2.1` を公開）
 
 ## 完了済み
 
